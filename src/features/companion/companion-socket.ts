@@ -14,7 +14,9 @@
 /** A realtime frame. `data` is the payload body; top-level fields are also allowed. */
 export interface CompanionFrame {
   type: string
-  data?: Record<string, unknown>
+  // Payload body. Usually an object (nested-data frames), but some frames carry
+  // a base64 audio string (call.audio / AI audio).
+  data?: unknown
   [key: string]: unknown
 }
 

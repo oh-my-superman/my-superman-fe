@@ -35,6 +35,8 @@ interface CompanionSessionState {
   setEnabled: (enabled: boolean) => void
   /** Send a raw realtime frame (gps / voice / screen / call.*). */
   send: (frame: CompanionFrame) => boolean
+  /** Subscribe to inbound frames (e.g. AI call events). Returns an unsubscribe. */
+  subscribe: (fn: (frame: CompanionFrame) => void) => () => void
 }
 
 export const useCompanionSession = create<CompanionSessionState>((set) => {
@@ -56,5 +58,6 @@ export const useCompanionSession = create<CompanionSessionState>((set) => {
     endSession: () => socket.close(),
     setEnabled: (enabled) => socket.setEnabled(enabled),
     send: (frame) => socket.send(frame),
+    subscribe: (fn) => socket.onFrame(fn),
   }
 })
