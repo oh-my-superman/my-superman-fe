@@ -3,7 +3,6 @@ import { Phone, Plus, Video } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Avatar } from '#/components/ui/avatar'
-import { Card } from '#/components/ui/card'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { MainLayout } from '#/components/main-layout'
 import { PERSONAS } from '#/features/home/personas'
@@ -127,32 +126,28 @@ export function CallScreen() {
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
-          padding: '16px 16px 20px',
+          background: 'var(--card)', // Typically white
         }}
       >
-        <SectionLabel action="편집" onAction={() => {}}>
-          내 슈퍼맨
-        </SectionLabel>
-        <div
-          style={{
-            fontSize: 'var(--text-sm)',
-            color: 'var(--muted-foreground)',
-            padding: '0 4px 10px',
-          }}
-        >
-          다양한 AI 페르소나와 통화
+        <div style={{ padding: '16px 20px 8px' }}>
+          <SectionLabel action="편집" onAction={() => {}}>
+            내 슈퍼맨
+          </SectionLabel>
+          <div
+            style={{
+              fontSize: 'var(--text-sm)',
+              color: 'var(--muted-foreground)',
+              padding: '0 4px',
+            }}
+          >
+            다양한 AI 페르소나와 통화
+          </div>
         </div>
-        <Card
-          flat
-          style={{
-            borderRadius: 'var(--radius-xl)',
-            marginBottom: 22,
-            border: 'none',
-          }}
-        >
+
+        <div style={{ marginTop: 8 }}>
           {PERSONAS.map((p, i) => (
             <div key={p.id}>
-              {i > 0 && <ListDivider />}
+              {i > 0 && <ListDivider inset />}
               <ListItem
                 leading={
                   <Avatar
@@ -173,7 +168,7 @@ export function CallScreen() {
               />
             </div>
           ))}
-          <ListDivider />
+          <ListDivider inset />
           <ListItem
             leading={
               <div
@@ -196,7 +191,7 @@ export function CallScreen() {
             chevron
             onClick={() => {}}
           />
-        </Card>
+        </div>
       </div>
     </MainLayout>
   )

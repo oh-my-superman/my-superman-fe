@@ -14,7 +14,7 @@ interface Tab {
 
 const TABS: Array<Tab> = [
   { to: '/', icon: Phone, label: '슈퍼 통화' },
-  { to: '/protection', icon: Shield, label: '슈퍼맨', primary: true },
+  { to: '/protection', icon: Shield, label: '보호 모드', primary: true },
   { to: '/map', icon: Map, label: '안전 지도' },
 ]
 
@@ -34,6 +34,7 @@ export function BottomNav() {
         background: 'var(--background)',
         padding: '8px 0 8px',
         position: 'relative',
+        zIndex: 10,
       }}
     >
       {TABS.map((t) => {
@@ -64,17 +65,15 @@ export function BottomNav() {
               <div
                 style={{
                   marginTop: -30,
-                  width: 56,
-                  height: 56,
+                  width: 42,
+                  height: 42,
                   borderRadius: 99,
                   background: companion ? 'var(--coral-500)' : 'var(--card)',
                   color: companion ? '#fff' : 'var(--coral-500)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: companion
-                    ? '4px solid var(--background)'
-                    : '2px solid var(--coral-200)',
+                  border: 'none',
                   boxShadow: companion
                     ? 'var(--shadow-coral)'
                     : 'var(--shadow-md)',

@@ -62,6 +62,11 @@ export function ListItem({
   return <div data-sm-slot="list-item">{body}</div>
 }
 
-export function ListDivider() {
-  return <hr data-sm-slot="list-divider" />
+export function ListDivider({ inset = false }: { inset?: boolean }) {
+  return (
+    <hr
+      data-sm-slot="list-divider"
+      style={inset ? { marginLeft: 72 } : undefined}
+    />
+  )
 }
