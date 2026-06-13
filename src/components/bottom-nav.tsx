@@ -24,7 +24,7 @@ export function BottomNav() {
       style={{
         flex: 'none',
         display: 'flex',
-        borderTop: '1px solid var(--border)',
+        borderTop: 'none',
         background: 'var(--background)',
         padding: '8px 0 4px',
       }}
@@ -51,7 +51,7 @@ export function BottomNav() {
               color: active ? 'var(--coral-600)' : 'var(--muted-foreground)',
             }}
           >
-            <TabIcon size={22} />
+            <TabIcon size={22} fill="currentColor" />
             <span style={{ fontSize: 11, fontWeight: 600 }}>{t.label}</span>
           </button>
         )

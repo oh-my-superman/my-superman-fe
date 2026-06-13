@@ -1,16 +1,15 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState, useRef, useEffect } from 'react'
-import { Bell, Clock, Phone, Plus, Settings, Video } from 'lucide-react'
+import { Bell, Phone, Plus, Settings, Video } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Avatar } from '#/components/ui/avatar'
-import { Badge } from '#/components/ui/badge'
 import { Card } from '#/components/ui/card'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { Switch } from '#/components/ui/switch'
 import { AppBar } from '#/components/app-bar'
 import { BottomNav } from '#/components/bottom-nav'
-import { PERSONAS, SCHEDULED } from '#/features/home/personas'
+import { PERSONAS } from '#/features/home/personas'
 
 /** Per-persona call + video-call actions (right side of each roster row). */
 function CallActions({
@@ -319,7 +318,11 @@ export function HomeScreen() {
         </div>
         <Card
           flat
-          style={{ borderRadius: 'var(--radius-xl)', marginBottom: 22 }}
+          style={{
+            borderRadius: 'var(--radius-xl)',
+            marginBottom: 22,
+            border: 'none',
+          }}
         >
           {PERSONAS.map((p, i) => (
             <div key={p.id}>
@@ -369,38 +372,7 @@ export function HomeScreen() {
           />
         </Card>
 
-        {/* Scheduled */}
-        <SectionLabel>예약된 동행</SectionLabel>
-        <Card flat style={{ borderRadius: 'var(--radius-xl)' }}>
-          {SCHEDULED.map((s, i) => (
-            <div key={s.id}>
-              {i > 0 && <ListDivider />}
-              <ListItem
-                leading={
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 99,
-                      background: 'var(--accent)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--coral-600)',
-                    }}
-                  >
-                    <Clock size={20} />
-                  </div>
-                }
-                title={s.title}
-                subtitle={s.when}
-                trailing={<Badge variant="accent">{s.persona}</Badge>}
-                chevron
-                onClick={() => {}}
-              />
-            </div>
-          ))}
-        </Card>
+
       </div>
 
       <BottomNav />
