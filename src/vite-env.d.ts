@@ -23,3 +23,10 @@ declare module '#/features/map/cctv-data.json' {
   const data: Array<[number, number, string, string]>
   export default data
 }
+
+// Geocoded 안심지킴이집 dataset (built by scripts/build-safehouses.mjs).
+// Tuple layout: [lat, lng, name, address]
+declare module '#/features/map/safehouses.json' {
+  const data: Array<[number, number, string, string]>
+  export default data
+}

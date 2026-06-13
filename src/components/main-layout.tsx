@@ -22,9 +22,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <AppBar
           title="나의 슈퍼맨"
           status={
-            companion
-              ? '보호모드 활성화 · 위험상황 감지 중'
-              : '보호모드 비활성'
+            companion ? '보호모드 활성화 · 위험상황 감지 중' : '보호모드 비활성'
           }
           statusActive={companion}
           actions={[

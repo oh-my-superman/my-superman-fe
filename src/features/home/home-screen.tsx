@@ -357,7 +357,7 @@ export function HomeScreen() {
             onClick={() => {}}
           />
         </Card>
-        </div>
-        </MainLayout>
-        )
-        }
+      </div>
+    </MainLayout>
+  )
+}

@@ -9,17 +9,21 @@ import type { LucideIcon } from 'lucide-react'
 import { Badge } from '#/components/ui/badge'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { MainLayout } from '#/components/main-layout'
-import { SAFE_HOUSES, SEOLLEUNG_CENTER } from '#/features/map/spots'
+import { SEOLLEUNG_CENTER } from '#/features/map/spots'
 import { fetchNearbyCctv } from '#/features/map/cctv'
 import type { Bbox } from '#/features/map/cctv'
+import { fetchNearbySafehouses } from '#/features/map/safehouses'
+import type { SafeHousePoint } from '#/features/map/safehouses'
 import { useKakaoMapLoader } from '#/features/map/use-kakao-map'
 
 const CCTV_COLOR = 'var(--blue-info)'
 const SAFE_COLOR = 'var(--coral-500)'
 
-// How many CCTV to draw / list (nearest first) so dense areas stay readable.
+// How many markers / list rows to draw (nearest first) so dense areas stay readable.
 const MAX_CCTV_MARKERS = 60
 const MAX_CCTV_LIST = 30
+const MAX_SAFE_MARKERS = 60
+const MAX_SAFE_LIST = 20
 
 interface LatLng {
   lat: number
@@ -193,6 +197,10 @@ interface CctvNear {
   distance: number
 }
 
+interface SafeHouseNear extends SafeHousePoint {
+  distance: number
+}
+
 /** Centered notice shown over the map canvas (missing key / load error). */
 function MapNotice({ children }: { children: React.ReactNode }) {
   return (
@@ -221,6 +229,7 @@ function KakaoCanvas({
   userPos,
   selectedId,
   cctv,
+  safehouses,
   onBboxChange,
   onSelect,
 }: {
@@ -228,6 +237,7 @@ function KakaoCanvas({
   userPos: LatLng | null
   selectedId: string | null
   cctv: Array<CctvNear>
+  safehouses: Array<SafeHouseNear>
   onBboxChange: (bbox: Bbox) => void
   onSelect: (id: string, pos: LatLng) => void
 }) {
@@ -277,7 +287,7 @@ function KakaoCanvas({
       onCreate={syncBbox}
       onBoundsChanged={syncBbox}
     >
-      {SAFE_HOUSES.map((s) => (
+      {safehouses.slice(0, MAX_SAFE_MARKERS).map((s) => (
         <CustomOverlayMap
           key={s.id}
           position={{ lat: s.lat, lng: s.lng }}
@@ -374,6 +384,24 @@ export function MapScreen() {
       .sort((a, b) => a.distance - b.distance)
   }, [cctvQuery.data, refPoint])
 
+  // 안심지킴이집 (geocoded JSON, server-filtered by bbox).
+  const safehousesQuery = useQuery({
+    queryKey: ['safehouses', roundBbox(bbox)],
+    queryFn: () => fetchNearbySafehouses({ data: bbox }),
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  })
+  const safehouseTotal = safehousesQuery.data?.total ?? 0
+  const safehousesNear: Array<SafeHouseNear> = useMemo(() => {
+    const items = safehousesQuery.data?.items ?? []
+    return items
+      .map((s) => ({
+        ...s,
+        distance: haversineM(refPoint, { lat: s.lat, lng: s.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+  }, [safehousesQuery.data, refPoint])
+
   const selectSpot = useCallback((id: string, pos: LatLng) => {
     setSelectedId(id)
     setCenter(pos)
@@ -396,6 +424,7 @@ export function MapScreen() {
             userPos={userPos}
             selectedId={selectedId}
             cctv={cctvNear}
+            safehouses={safehousesNear}
             onBboxChange={setBbox}
             onSelect={selectSpot}
           />
@@ -421,7 +450,7 @@ export function MapScreen() {
           <Chip
             color={SAFE_COLOR}
             label="안심 지킴이 집"
-            count={SAFE_HOUSES.length}
+            count={safehousesQuery.isLoading ? '…' : safehouseTotal}
           />
         </div>
 
@@ -494,25 +523,13 @@ export function MapScreen() {
             </Badge>
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            {SAFE_HOUSES.map((s, i) => (
+            {safehousesNear.slice(0, MAX_SAFE_LIST).map((s, i) => (
               <div key={s.id}>
                 {i > 0 && <ListDivider />}
                 <ListItem
                   leading={<SpotIcon safe />}
-                  title={s.title}
-                  subtitle={
-                    <span>
-                      {s.dist} · {s.meta}
-                      {s.open ? (
-                        <span
-                          style={{ color: 'var(--success)', fontWeight: 600 }}
-                        >
-                          {' '}
-                          · 영업 중
-                        </span>
-                      ) : null}
-                    </span>
-                  }
+                  title={s.name}
+                  subtitle={`안심 지킴이 집 · ${distLabel(s.distance)}${s.address ? ` · ${s.address}` : ''}`}
                   chevron
                   onClick={() => selectSpot(s.id, { lat: s.lat, lng: s.lng })}
                 />
@@ -532,18 +549,21 @@ export function MapScreen() {
               </div>
             ))}
 
-            {!cctvQuery.isLoading && total === 0 && (
-              <p
-                style={{
-                  margin: '12px 4px',
-                  fontSize: 'var(--text-sm)',
-                  color: 'var(--muted-foreground)',
-                }}
-              >
-                이 영역에는 등록된 방범 CCTV가 없어요. 지도를 옮겨 보세요.
-                (데이터: 서울 지역)
-              </p>
-            )}
+            {!cctvQuery.isLoading &&
+              !safehousesQuery.isLoading &&
+              total === 0 &&
+              safehouseTotal === 0 && (
+                <p
+                  style={{
+                    margin: '12px 4px',
+                    fontSize: 'var(--text-sm)',
+                    color: 'var(--muted-foreground)',
+                  }}
+                >
+                  이 영역에는 표시할 안전 지점이 없어요. 지도를 옮겨 보세요.
+                  (데이터: 서울 지역)
+                </p>
+              )}
           </div>
         </div>
       </div>

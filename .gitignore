@@ -15,3 +15,4 @@ todos.json
 
 # Raw CCTV CSVs (manual download) — only the filtered cctv-data.json is committed
 cctv_*.csv
+safehouse_seoul.csv

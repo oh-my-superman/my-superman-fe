@@ -27,7 +27,9 @@ const KEEP_PURPOSE = ['방범', '생활안전', '어린이']
 
 const csvPaths = process.argv.slice(2)
 if (csvPaths.length === 0) {
-  console.error('Usage: node scripts/build-cctv.mjs <csv...>  (e.g. cctv_seoul.csv cctv_gyeonggi.csv)')
+  console.error(
+    'Usage: node scripts/build-cctv.mjs <csv...>  (e.g. cctv_seoul.csv cctv_gyeonggi.csv)',
+  )
   process.exit(1)
 }
 
@@ -122,7 +124,12 @@ function processFile(path) {
       (idx.road >= 0 ? row[idx.road] : '') ||
       (idx.jibun >= 0 ? row[idx.jibun] : '')
     ).trim()
-    out.push([Number(lat.toFixed(6)), Number(lng.toFixed(6)), purpose || '방범', address])
+    out.push([
+      Number(lat.toFixed(6)),
+      Number(lng.toFixed(6)),
+      purpose || '방범',
+      address,
+    ])
     kept++
   }
   console.log(`✓ ${path}: parsed ${parsed} → kept ${kept}`)
