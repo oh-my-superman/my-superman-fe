@@ -206,6 +206,8 @@ export function ProtectionScreen() {
                 borderRadius: '50%',
                 background: '#ffffff',
                 overflow: 'hidden',
+                WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                transform: 'translateZ(0)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
