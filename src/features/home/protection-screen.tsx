@@ -130,7 +130,7 @@ export function ProtectionScreen() {
     const diff = Math.abs(hPa - 1013)
     const variation = Math.min(67, diff * 15) // Max 67% additional for diff
     const pulse = (sensorData.pressure % 10) * 0.5 // Minimal pulse for "live" feel
-    
+
     return Math.min(100, baseline + variation + pulse)
   }
   const getMotionPercent = (m: number) => Math.min(100, (m / 28) * 100)

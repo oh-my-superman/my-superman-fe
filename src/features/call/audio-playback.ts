@@ -20,7 +20,10 @@ export class AudioPlayback {
   #active = false
   #idleTimer: ReturnType<typeof setTimeout> | null = null
 
-  constructor(context: AudioContext, onActiveChange?: (active: boolean) => void) {
+  constructor(
+    context: AudioContext,
+    onActiveChange?: (active: boolean) => void,
+  ) {
     this.#ctx = context
     this.#onActiveChange = onActiveChange
   }

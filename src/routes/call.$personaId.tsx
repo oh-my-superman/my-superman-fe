@@ -1,13 +1,28 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Mic, MicOff, PhoneOff, ShieldAlert } from 'lucide-react'
+import type { CSSProperties } from 'react'
+import {
+  Mic,
+  MicOff,
+  PhoneOff,
+  PictureInPicture2,
+  Settings,
+  ShieldAlert,
+  Sparkles,
+  SwitchCamera,
+  Video,
+  Volume2,
+} from 'lucide-react'
 
 import { PERSONAS } from '#/features/home/personas'
 import { useCall } from '#/features/call/call-store'
 import { SAFEWORD } from '#/features/call/call-controller'
 import { useCameraEvidence } from '#/features/capture/use-camera-evidence'
 import { useCompanionSession } from '#/features/companion/session-store'
-import { buildDangerReport, sendDangerReport } from '#/features/report/build-report'
+import {
+  buildDangerReport,
+  sendDangerReport,
+} from '#/features/report/build-report'
 import type {
   DangerReportRequest,
   ReportBuildResult,
@@ -53,7 +68,9 @@ const INITIAL_REPORT_STATE: ReportState = {
   secondsLeft: REPORT_CONFIRM_SECONDS,
 }
 
-function dangerEventKey(danger: NonNullable<ReturnType<typeof useCall.getState>['danger']>) {
+function dangerEventKey(
+  danger: NonNullable<ReturnType<typeof useCall.getState>['danger']>,
+) {
   const eventId = danger.event_id
   if (typeof eventId === 'string' && eventId) return eventId
   const ts = danger.ts_ms
@@ -225,34 +242,59 @@ function CallScreen() {
     navigate({ to: '/' })
   }
 
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'var(--surface)',
-        padding: 24,
-      }}
-    >
-      {isVideoCall ? (
+  const connecting = status === 'connecting' || status === 'starting'
+  const videoCtrlStyle: CSSProperties = {
+    width: 52,
+    height: 52,
+    borderRadius: 99,
+    border: 'none',
+    background: 'rgba(255,255,255,0.14)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  }
+
+  // ── Video call: full-screen front camera + overlaid name/status (reference). ──
+  if (isVideoCall) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          background: 'var(--neutral-900)',
+          color: '#fff',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header icons */}
         <div
-          aria-label="내 카메라 화면"
           style={{
-            position: 'absolute',
-            right: 20,
-            bottom: 108,
-            zIndex: 3,
-            width: 'min(34vw, 132px)',
-            minWidth: 104,
-            aspectRatio: '3 / 4',
-            borderRadius: 18,
+            flex: 'none',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 18,
+            padding: '14px 18px 8px',
+            opacity: 0.92,
+          }}
+        >
+          <Settings size={22} />
+          <Volume2 size={22} />
+          <PictureInPicture2 size={22} />
+        </div>
+
+        {/* Full-screen camera */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            margin: '0 12px',
+            borderRadius: 'var(--radius-2xl)',
             overflow: 'hidden',
-            background: 'var(--neutral-800)',
-            boxShadow: 'var(--shadow-lg)',
-            border: '2px solid rgba(255, 255, 255, 0.85)',
+            position: 'relative',
+            background: '#000',
           }}
         >
           <video
@@ -268,23 +310,184 @@ function CallScreen() {
               display: 'block',
             }}
           />
+
+          {/* Name + status + connecting dots */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 28,
+              left: 0,
+              right: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+              textShadow: '0 1px 6px rgba(0,0,0,.45)',
+            }}
+          >
+            <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
+              {persona.name}
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', opacity: 0.92 }}>
+              {error ?? STATUS_LABEL[status]}
+            </div>
+            {connecting && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 99,
+                      background: 'var(--coral-400)',
+                      animation: 'sm-dot-blink 1.2s ease-in-out infinite',
+                      animationDelay: `${i * 0.2}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recording pill */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 18,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 14px',
+              borderRadius: 99,
+              background: 'rgba(20,16,16,.55)',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 99,
+                border: '2px solid #fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 'none',
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 99,
+                  background: 'var(--coral-500)',
+                }}
+              />
+            </span>
+            통화 녹음 시작
+          </div>
         </div>
-      ) : (
-        <video
-          ref={evidenceVideoRef}
-          muted
-          playsInline
-          autoPlay
-          aria-hidden
+
+        {/* Control bar */}
+        <div
           style={{
-            position: 'absolute',
-            width: 1,
-            height: 1,
-            opacity: 0,
-            pointerEvents: 'none',
+            flex: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            padding: '18px 18px 26px',
           }}
-        />
-      )}
+        >
+          <button type="button" aria-label="효과" style={videoCtrlStyle}>
+            <Sparkles size={22} />
+          </button>
+          <button
+            type="button"
+            aria-label={muted ? '음소거 해제' : '음소거'}
+            aria-pressed={muted}
+            onClick={toggleMute}
+            style={{
+              ...videoCtrlStyle,
+              background: muted ? '#fff' : 'rgba(255,255,255,0.14)',
+              color: muted ? 'var(--neutral-900)' : '#fff',
+            }}
+          >
+            {muted ? <MicOff size={22} /> : <Mic size={22} />}
+          </button>
+          <button
+            type="button"
+            aria-label="종료"
+            onClick={endCall}
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 99,
+              border: 'none',
+              background: 'var(--coral-500)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-coral)',
+            }}
+          >
+            <PhoneOff size={26} />
+          </button>
+          <button type="button" aria-label="카메라 전환" style={videoCtrlStyle}>
+            <SwitchCamera size={22} />
+          </button>
+          <button type="button" aria-label="영상" style={videoCtrlStyle}>
+            <Video size={22} />
+          </button>
+        </div>
+
+        {danger && (
+          <DangerModal
+            danger={danger}
+            report={report}
+            onConfirm={confirmReport}
+            onCancel={cancelReport}
+            onClose={dismissDanger}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // ── Voice call: AI persona portrait + simple controls. ──
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'var(--surface)',
+        padding: 24,
+      }}
+    >
+      {/* Hidden evidence camera (voice call). */}
+      <video
+        ref={evidenceVideoRef}
+        muted
+        playsInline
+        autoPlay
+        aria-hidden
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      />
 
       {/* Persona identity + status */}
       <div
@@ -298,7 +501,6 @@ function CallScreen() {
           gap: 16,
         }}
       >
-        {/* AI 발화/경청 연출: 오디오 재생 중이면 talking, 아니면 listening */}
         <div
           style={{
             position: 'relative',

@@ -178,6 +178,17 @@
   background: transparent;
 }
 
+/* "연결 중…" blinking dots (call connecting). */
+@keyframes sm-dot-blink {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 html,
 body,
 #app {
