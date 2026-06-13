@@ -8,6 +8,7 @@ import { Card } from '#/components/ui/card'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { MainLayout } from '#/components/main-layout'
 import { PERSONAS } from '#/features/home/personas'
+import { useCompanionSession } from '#/features/companion/session-store'
 import { useCompanionStore } from '#/store/companion'
 
 /** Per-persona call + video-call actions (right side of each roster row). */
@@ -117,10 +118,21 @@ export function HomeScreen() {
   const navigate = useNavigate()
   const companion = useCompanionStore((s) => s.companion)
   const setCompanion = useCompanionStore((s) => s.setCompanion)
+  const startSession = useCompanionSession((s) => s.startSession)
+  const endSession = useCompanionSession((s) => s.endSession)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const callPersona = (id: string) =>
     navigate({ to: '/call/$personaId', params: { personaId: id } })
+
+  // 보호모드 ⇔ realtime session: ON opens `/ws/companion` (session.start), OFF
+  // ends it (session.end). The session itself is an app-wide singleton, so it
+  // survives route changes and mobile background/resume — only an explicit OFF
+  // tears it down.
+  useEffect(() => {
+    if (companion) void startSession(true)
+    else void endSession()
+  }, [companion, startSession, endSession])
 
   useEffect(() => {
     if (videoRef.current) {

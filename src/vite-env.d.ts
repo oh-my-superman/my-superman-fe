@@ -4,6 +4,12 @@
 interface ImportMetaEnv {
   /** Kakao Maps JavaScript app key (public; protected by domain allowlist). */
   readonly VITE_KAKAO_MAP_APP_KEY?: string
+  /**
+   * Base origin of the BE realtime server, e.g. `ws://localhost:8080` (or
+   * `wss://…` in prod). The `/ws/companion` path is appended automatically.
+   * Falls back to the page host on port 8080 when unset.
+   */
+  readonly VITE_WS_BASE_URL?: string
 }
 
 interface ImportMeta {
