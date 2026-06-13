@@ -249,7 +249,7 @@ export function HomeScreen() {
                   height: '120%',
                   objectFit: 'cover',
                   transform: companion
-                    ? 'scale(1) translateY(-10px)'
+                    ? 'scale(1) translateY(+10px)'
                     : 'scale(1)',
                   transition: 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   mixBlendMode: 'multiply',
