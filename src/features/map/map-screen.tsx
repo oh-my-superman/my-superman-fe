@@ -430,6 +430,20 @@ export function MapScreen() {
       .sort((a, b) => a.distance - b.distance)
   }, [safehousesQuery.data, refPoint])
 
+  // Merge safe houses + CCTV into one list ordered by distance (bottom sheet).
+  type SheetItem =
+    | ({ kind: 'safe' } & SafeHouseNear)
+    | ({ kind: 'cctv' } & CctvNear)
+  const sheetItems: Array<SheetItem> = useMemo(() => {
+    const safe = safehousesNear
+      .slice(0, MAX_SAFE_LIST)
+      .map((s) => ({ kind: 'safe' as const, ...s }))
+    const cctv = cctvNear
+      .slice(0, MAX_CCTV_LIST)
+      .map((c) => ({ kind: 'cctv' as const, ...c }))
+    return [...safe, ...cctv].sort((a, b) => a.distance - b.distance)
+  }, [safehousesNear, cctvNear])
+
   const selectSpot = useCallback((id: string, pos: LatLng) => {
     setSelectedId(id)
     setCenter(pos)
@@ -550,28 +564,25 @@ export function MapScreen() {
               paddingRight: 4,
             }}
           >
-            {safehousesNear.slice(0, MAX_SAFE_LIST).map((s, i) => (
-              <div key={s.id}>
+            {sheetItems.map((item, i) => (
+              <div key={`${item.kind}-${item.id}`}>
                 {i > 0 && <ListDivider />}
                 <ListItem
-                  leading={<SpotIcon safe />}
-                  title={s.name}
-                  subtitle={`안심 지킴이 집 · ${distLabel(s.distance)}${s.address ? ` · ${s.address}` : ''}`}
+                  leading={<SpotIcon safe={item.kind === 'safe'} />}
+                  title={
+                    item.kind === 'safe'
+                      ? item.name
+                      : item.address || `방범 CCTV (${item.purpose})`
+                  }
+                  subtitle={
+                    item.kind === 'safe'
+                      ? `안심 지킴이 집 · ${distLabel(item.distance)}${item.address ? ` · ${item.address}` : ''}`
+                      : `${item.purpose} CCTV · ${distLabel(item.distance)}`
+                  }
                   chevron
-                  onClick={() => selectSpot(s.id, { lat: s.lat, lng: s.lng })}
-                />
-              </div>
-            ))}
-
-            {cctvNear.slice(0, MAX_CCTV_LIST).map((c, i) => (
-              <div key={c.id}>
-                {(i > 0 || safehousesNear.length > 0) && <ListDivider />}
-                <ListItem
-                  leading={<SpotIcon />}
-                  title={c.address || `방범 CCTV (${c.purpose})`}
-                  subtitle={`${c.purpose} CCTV · ${distLabel(c.distance)}`}
-                  chevron
-                  onClick={() => selectSpot(c.id, { lat: c.lat, lng: c.lng })}
+                  onClick={() =>
+                    selectSpot(item.id, { lat: item.lat, lng: item.lng })
+                  }
                 />
               </div>
             ))}
