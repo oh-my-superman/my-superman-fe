@@ -7,9 +7,9 @@ import { useCall } from '#/features/call/call-store'
 import { SAFEWORD } from '#/features/call/call-controller'
 import { useCameraEvidence } from '#/features/capture/use-camera-evidence'
 import { useCompanionSession } from '#/features/companion/session-store'
-import { buildDangerReport } from '#/features/report/build-report'
+import { buildDangerReport, sendDangerReport } from '#/features/report/build-report'
 import type {
-  ReportBuildCause,
+  DangerReportRequest,
   ReportBuildResult,
 } from '#/features/report/build-report'
 
@@ -53,12 +53,6 @@ const INITIAL_REPORT_STATE: ReportState = {
   secondsLeft: REPORT_CONFIRM_SECONDS,
 }
 
-interface ReportRequest {
-  sessionId: string
-  cause: ReportBuildCause
-  safeword?: string
-}
-
 function dangerEventKey(danger: NonNullable<ReturnType<typeof useCall.getState>['danger']>) {
   const eventId = danger.event_id
   if (typeof eventId === 'string' && eventId) return eventId
@@ -94,7 +88,7 @@ function CallScreen() {
   const dismissDanger = useCall((s) => s.dismissDanger)
   const [report, setReport] = useState<ReportState>(INITIAL_REPORT_STATE)
   const reportEventKeyRef = useRef<string | null>(null)
-  const reportRequestRef = useRef<ReportRequest | null>(null)
+  const reportRequestRef = useRef<DangerReportRequest | null>(null)
   const reportInFlightRef = useRef(false)
 
   const callFinished = status === 'ended' || status === 'error'
@@ -126,30 +120,39 @@ function CallScreen() {
       secondsLeft: 0,
     })
 
-    buildDangerReport(request)
-      .then((result) => {
+    void (async () => {
+      let draft: ReportBuildResult | null = null
+
+      try {
+        draft = await buildDangerReport(request)
+        setReport({
+          status: 'building',
+          result: draft,
+          error: null,
+          secondsLeft: 0,
+        })
+        await sendDangerReport({ request, draft })
         setReport({
           status: 'ready',
-          result,
+          result: draft,
           error: null,
           secondsLeft: 0,
         })
         reportRequestRef.current = null
         stop()
         navigate({ to: '/', replace: true })
-      })
-      .catch((err) => {
-        console.error('[report] danger report build failed', err)
+      } catch (err) {
+        console.error('[report] danger report submit failed', err)
         setReport({
           status: 'error',
-          result: null,
-          error: '신고 메시지 생성에 실패했어요.',
+          result: draft,
+          error: '신고 요청에 실패했어요.',
           secondsLeft: 0,
         })
-      })
-      .finally(() => {
+      } finally {
         reportInFlightRef.current = false
-      })
+      }
+    })()
   }, [navigate, stop])
 
   const cancelReport = useCallback(() => {
@@ -440,10 +443,10 @@ function DangerModal({
     if (report.status === 'confirming') {
       return `${report.secondsLeft}초 후 자동으로 신고 요청을 보낼게요.`
     }
-    if (report.status === 'building') return '신고 메시지를 생성하고 있어요.'
-    if (report.status === 'ready') return '신고 메시지가 준비됐어요.'
-    if (report.status === 'error') return report.error ?? '신고 메시지 생성 실패'
-    return '신고 메시지 생성으로 넘어갈게요.'
+    if (report.status === 'building') return '신고 요청을 보내고 있어요.'
+    if (report.status === 'ready') return '신고 요청이 접수됐어요.'
+    if (report.status === 'error') return report.error ?? '신고 요청 실패'
+    return '신고 요청으로 넘어갈게요.'
   })()
   const confirming = report.status === 'confirming'
   const building = report.status === 'building'

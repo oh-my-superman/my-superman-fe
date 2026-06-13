@@ -14,6 +14,12 @@ export interface ReportBuildResult {
 
 export type ReportBuildCause = 'safeword' | 'scream'
 
+export interface DangerReportRequest {
+  sessionId: string
+  cause: ReportBuildCause
+  safeword?: string
+}
+
 function readString(value: unknown, keys: Array<string>): string | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
@@ -62,14 +68,10 @@ function reportContext(cause: ReportBuildCause): {
   }
 }
 
-export async function buildDangerReport(params: {
-  sessionId: string
-  cause: ReportBuildCause
-  safeword?: string
-}): Promise<ReportBuildResult> {
+async function createDangerReportBody(params: DangerReportRequest) {
   const gps = await getCurrentGps()
   const context = reportContext(params.cause)
-  const body = {
+  return {
     session_id: params.sessionId,
     transcript: context.transcript,
     user: {
@@ -80,6 +82,12 @@ export async function buildDangerReport(params: {
     photos: [],
     ...(params.safeword ? { safeword: params.safeword } : {}),
   }
+}
+
+export async function buildDangerReport(
+  params: DangerReportRequest,
+): Promise<ReportBuildResult> {
+  const body = await createDangerReportBody(params)
 
   const response = await fetch(serviceUrl('/api/report/build'), {
     method: 'POST',
@@ -97,5 +105,27 @@ export async function buildDangerReport(params: {
       readString(json, ['report_message', 'reportMessage']) ??
       '신고 메시지가 생성됐어요.',
     generatedAt: readString(json, ['generated_at', 'generatedAt']),
+  }
+}
+
+export async function sendDangerReport(params: {
+  request: DangerReportRequest
+  draft: ReportBuildResult
+}): Promise<void> {
+  const body = {
+    ...(await createDangerReportBody(params.request)),
+    cause: params.request.cause,
+    report_message: params.draft.reportMessage,
+    generated_at: params.draft.generatedAt,
+  }
+
+  const response = await fetch(serviceUrl('/api/report/send'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    throw new Error(`report/send failed: ${response.status}`)
   }
 }
