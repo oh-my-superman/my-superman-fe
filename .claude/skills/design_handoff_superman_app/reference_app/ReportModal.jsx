@@ -101,7 +101,7 @@ function ReportModal({ open, onOpenChange }) {
         </div>
         <DialogDescription style={{ textAlign: 'left' }}>
           비명·다툼 소리와 비정상 이동이 감지됐어요. 곧 보호자에게 위치와 직전
-          증거를 전송합니다.
+          증거를 전송해요.
         </DialogDescription>
       </DialogHeader>
 

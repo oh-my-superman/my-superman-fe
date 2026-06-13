@@ -126,9 +126,23 @@ export function ProtectionScreen() {
 
   const getStatusInfo = () => {
     const score = sensorData.dangerScore
-    if (score > 80) return { label: '긴급 위험 감지', color: 'var(--red-emergency)', bg: '#fef2f2' }
-    if (score > 40) return { label: '주변 상황 주의', color: 'var(--amber-caution)', bg: '#fffbeb' }
-    return { label: '실시간 보호 중', color: 'var(--green-safe)', bg: '#f0fdf4' }
+    if (score > 80)
+      return {
+        label: '긴급 위험 감지',
+        color: 'var(--red-emergency)',
+        bg: '#fef2f2',
+      }
+    if (score > 40)
+      return {
+        label: '주변 상황 주의',
+        color: 'var(--amber-caution)',
+        bg: '#fffbeb',
+      }
+    return {
+      label: '실시간 보호 중',
+      color: 'var(--green-safe)',
+      bg: '#f0fdf4',
+    }
   }
 
   const status = getStatusInfo()
@@ -189,7 +203,11 @@ export function ProtectionScreen() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  style={{ position: 'absolute', inset: -20, pointerEvents: 'none' }}
+                  style={{
+                    position: 'absolute',
+                    inset: -20,
+                    pointerEvents: 'none',
+                  }}
                 >
                   <div
                     className="animate-sm-hero-pulse"
@@ -247,7 +265,8 @@ export function ProtectionScreen() {
                     transform: companion
                       ? 'scale(1) translateY(+10px)'
                       : 'scale(1)',
-                    transition: 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transition:
+                      'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
                     mixBlendMode: 'multiply',
                   }}
                   onTimeUpdate={() => {
@@ -294,10 +313,19 @@ export function ProtectionScreen() {
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ repeat: Infinity, duration: 2 }}
-                    style={{ width: 8, height: 8, borderRadius: 99, background: 'currentColor' }}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 99,
+                      background: 'currentColor',
+                    }}
                   />
-                  <span style={{ fontSize: 15, fontWeight: 800 }}>{status.label}</span>
-                  <span style={{ fontSize: 13, opacity: 0.8, fontWeight: 600 }}>{sensorData.dangerScore}%</span>
+                  <span style={{ fontSize: 15, fontWeight: 800 }}>
+                    {status.label}
+                  </span>
+                  <span style={{ fontSize: 13, opacity: 0.8, fontWeight: 600 }}>
+                    {sensorData.dangerScore}%
+                  </span>
                 </motion.div>
               ) : (
                 <div
@@ -325,8 +353,8 @@ export function ProtectionScreen() {
               }}
             >
               {companion
-                ? '주변 환경의 위험 요소를 통합 분석하고 있습니다'
-                : '탭하여 실시간 감지를 시작하세요'}
+                ? '종합적인 위험 상황을 실시간으로 분석하고 있어요'
+                : '탭하여 보호모드를 시작하세요'}
             </p>
           </div>
         </div>
@@ -405,7 +433,7 @@ export function ProtectionScreen() {
                   marginTop: 20,
                 }}
               >
-                센서 데이터가 이곳에 표시됩니다
+                실시간 분석 데이터가 이곳에 표시돼요.
               </motion.div>
             )}
           </AnimatePresence>
