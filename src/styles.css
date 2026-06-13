@@ -1,14 +1,7 @@
 @import 'tailwindcss';
 
-/* ── Pretendard Variable (CDN; self-host for production) ─────────────── */
-@font-face {
-  font-family: 'Pretendard Variable';
-  font-weight: 45 920;
-  font-style: normal;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2')
-    format('woff2-variations');
-}
+/* ── Pretendard Variable (CDN) ─────────────── */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
 
 /* ─────────────────────────────────────────────────────────────────────
    나의 슈퍼맨 — Design tokens. Warm safety service, coral brand #f08080.
@@ -53,7 +46,7 @@
   --card-foreground: var(--neutral-900);
   --popover: var(--neutral-0);
   --popover-foreground: var(--neutral-900);
-  --surface: var(--neutral-50);
+  --surface: #faf9f8;
   --surface-foreground: var(--neutral-900);
   --primary: var(--coral-500);
   --primary-foreground: #ffffff;
@@ -509,6 +502,21 @@ body {
   100% {
     opacity: 0;
   }
+}
+
+@keyframes sm-hero-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.animate-sm-hero-pulse {
+  animation: sm-hero-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

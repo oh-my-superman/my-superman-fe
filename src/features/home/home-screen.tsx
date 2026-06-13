@@ -1,13 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
-import {
-  Bell,
-  Clock,
-  Phone,
-  Plus,
-  Settings,
-  Video,
-} from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Bell, Clock, Phone, Plus, Settings, Video } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Avatar } from '#/components/ui/avatar'
@@ -125,9 +118,23 @@ function SectionLabel({
 export function HomeScreen() {
   const navigate = useNavigate()
   const [companion, setCompanion] = useState(true)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const callPersona = (id: string) =>
     navigate({ to: '/call/$personaId', params: { personaId: id } })
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (companion) {
+        videoRef.current.play().catch(() => {
+          // Autoplay might be blocked until user interaction
+        })
+      } else {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
+    }
+  }, [companion])
 
   return (
     <div
@@ -138,22 +145,24 @@ export function HomeScreen() {
         background: 'var(--surface)',
       }}
     >
-      <AppBar
-        title="나의 슈퍼맨"
-        status={
-          companion
-            ? '슈퍼맨이 동행 중 · 위치 공유 켜짐'
-            : '동행 대기 중 · 위치 공유 켜짐'
-        }
-        actions={[
-          { icon: Bell, label: '알림' },
-          {
-            icon: Settings,
-            label: '설정',
-            onClick: () => navigate({ to: '/settings' }),
-          },
-        ]}
-      />
+      <div style={{ background: '#ffffff' }}>
+        <AppBar
+          title="나의 슈퍼맨"
+          status={
+            companion
+              ? '슈퍼맨이 동행 중 · 위치 공유 켜짐'
+              : '동행 대기 중 · 위치 공유 켜짐'
+          }
+          actions={[
+            { icon: Bell, label: '알림' },
+            {
+              icon: Settings,
+              label: '설정',
+              onClick: () => navigate({ to: '/settings' }),
+            },
+          ]}
+        />
+      </div>
 
       <div
         style={{
@@ -163,82 +172,136 @@ export function HomeScreen() {
           padding: '0 16px 20px',
         }}
       >
-        {/* AI 동행 toggle */}
+        {/* Large Superman Hero Toggle */}
         <div
+          onClick={() => setCompanion(!companion)}
           style={{
-            marginBottom: 22,
-            borderRadius: 'var(--radius-2xl)',
-            padding: '18px 20px',
+            marginTop: 16,
+            marginBottom: 32,
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
-            gap: 16,
-            background: companion
-              ? 'linear-gradient(135deg, var(--coral-50), var(--card))'
-              : 'var(--card)',
-            border: companion
-              ? '1px solid var(--coral-200)'
-              : '1px solid var(--border)',
-            boxShadow: companion ? 'var(--shadow-coral)' : 'var(--shadow-sm)',
-            transition:
-              'background .2s ease, border-color .2s ease, box-shadow .2s ease',
+            cursor: 'pointer',
           }}
         >
           <div
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 99,
-              flex: 'none',
+              position: 'relative',
+              width: 240,
+              height: 240,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: companion ? 'var(--coral-500)' : 'var(--coral-50)',
-              boxShadow: companion ? 'var(--shadow-coral)' : 'none',
-              transition: 'background .2s ease',
-              overflow: 'hidden',
             }}
           >
-            <img
-              src="/image/superman_app_icon.svg"
-              alt="메인 화면 아이콘"
+            {/* Pulse effect when ON */}
+            {companion && (
+              <>
+                <div
+                  className="animate-sm-hero-pulse"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: '50%',
+                    background: 'var(--coral-200)',
+                    zIndex: 0,
+                  }}
+                />
+                <div
+                  className="animate-sm-hero-pulse"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: '50%',
+                    background: 'var(--coral-100)',
+                    zIndex: 0,
+                    animationDelay: '1.5s',
+                  }}
+                />
+              </>
+            )}
+
+            {/* Circular Video Container */}
+            <div
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
-                opacity: companion ? 1 : 0.6,
-                transition: 'opacity .2s ease',
+                borderRadius: '50%',
+                background: '#ffffff',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 1,
+                border: companion ? 'none' : '1.5px solid var(--neutral-200)',
+                boxShadow: companion ? 'var(--shadow-coral)' : 'none',
+                transition: 'all .4s ease',
               }}
-            />
+            >
+              <video
+                ref={videoRef}
+                src="/video/flying_superman.mp4"
+                muted
+                playsInline
+                style={{
+                  width: '120%',
+                  height: '120%',
+                  objectFit: 'cover',
+                  transform: companion
+                    ? 'scale(1) translateY(-10px)'
+                    : 'scale(1)',
+                  transition: 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  mixBlendMode: 'multiply',
+                }}
+                onTimeUpdate={() => {
+                  // Loop from 5.7s to end when active
+                  if (
+                    companion &&
+                    videoRef.current &&
+                    videoRef.current.currentTime >=
+                      videoRef.current.duration - 0.2
+                  ) {
+                    videoRef.current.currentTime = 5.7
+                  }
+                }}
+                onEnded={() => {
+                  if (companion && videoRef.current) {
+                    videoRef.current.currentTime = 5.7
+                    videoRef.current.play()
+                  }
+                }}
+              />
+            </div>
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+
+          <div
+            style={{
+              marginTop: 16,
+              textAlign: 'center',
+            }}
+          >
             <div
               style={{
                 fontSize: 'var(--text-lg)',
-                fontWeight: 700,
-                letterSpacing: 'var(--tracking-tight)',
+                fontWeight: 800,
+                color: companion ? 'var(--coral-600)' : 'var(--foreground)',
+                marginBottom: 4,
               }}
             >
-              AI 동행 시작
+              {companion ? '보호모드 활성' : '보호모드 비활성'}
             </div>
             <div
               style={{
                 fontSize: 'var(--text-sm)',
-                color: companion
-                  ? 'var(--coral-700)'
-                  : 'var(--muted-foreground)',
-                marginTop: 2,
+                color: 'var(--muted-foreground)',
               }}
             >
               {companion
-                ? '슈퍼맨이 곁에서 함께 걷고 있어요'
-                : '탭 한 번으로 AI 동행을 켜세요'}
+                ? '위험한 상황을 감지하고 있어요.'
+                : '탭하여 안전모드를 활성화하세요'}
             </div>
           </div>
-          <Switch
-            checked={companion}
-            onCheckedChange={setCompanion}
-            aria-label="AI 동행"
-          />
         </div>
 
         {/* Personas */}
