@@ -117,10 +117,11 @@ export function ProtectionScreen() {
   // Map sensor data to percentages for the meters
   const getLuxPercent = (lx: number) => Math.min(100, (lx / 500) * 100)
   const getPressurePercent = (hPa: number) => {
-    // Normal range approx 980-1030
     const base = 980
     return Math.min(100, Math.max(0, ((hPa - base) / 50) * 100))
   }
+  const getMotionPercent = (m: number) => Math.min(100, (m / 40) * 100)
+  const getRotationPercent = (r: number) => Math.min(100, (r / 500) * 100)
   const getDbPercent = (db: number) => Math.min(100, (db / 100) * 100)
 
   useEffect(() => {
@@ -297,41 +298,39 @@ export function ProtectionScreen() {
                 style={{
                   height: '100%',
                   display: 'flex',
-                  gap: 16,
-                  padding: '24px',
+                  gap: 8,
+                  padding: '24px 12px',
                   background: '#fff',
                   borderRadius: 'var(--radius-3xl)',
                 }}
               >
                 <LevelMeter
-                  label="주변 밝기"
+                  label="밝기"
                   value={sensorData.lux}
                   unit="lx"
                   color="#f5a623"
                   percent={getLuxPercent(sensorData.lux)}
                 />
-                <div
-                  style={{
-                    width: 1,
-                    background: 'var(--neutral-100)',
-                    height: '80%',
-                    alignSelf: 'center',
-                  }}
-                />
                 <LevelMeter
-                  label="물리적 충격"
+                  label="기압"
                   value={sensorData.pressure}
                   unit="hPa"
                   color="#4a8cf0"
                   percent={getPressurePercent(sensorData.pressure)}
                 />
-                <div
-                  style={{
-                    width: 1,
-                    background: 'var(--neutral-100)',
-                    height: '80%',
-                    alignSelf: 'center',
-                  }}
+                <LevelMeter
+                  label="충격"
+                  value={sensorData.motion}
+                  unit="m/s²"
+                  color="#ef4444"
+                  percent={getMotionPercent(sensorData.motion)}
+                />
+                <LevelMeter
+                  label="회전"
+                  value={sensorData.rotation}
+                  unit="°/s"
+                  color="#8b5cf6"
+                  percent={getRotationPercent(sensorData.rotation)}
                 />
                 <LevelMeter
                   label="소음"

@@ -13,7 +13,7 @@ const DEFAULT_THRESHOLDS: SensorThresholds = {
 }
 
 export function useSafetySensors(active: boolean) {
-  const [data, setData] = useState({ lux: 0, pressure: 0, db: 0 })
+  const [data, setData] = useState({ lux: 0, pressure: 0, db: 0, motion: 0, rotation: 0 })
   const audioContextRef = useRef<AudioContext | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const sensorsRef = useRef<any[]>([])
@@ -42,6 +42,20 @@ export function useSafetySensors(active: boolean) {
   }, [active])
 
   async function startSensors() {
+    // 0. Request Motion Permissions (iOS)
+    if (
+      typeof (DeviceMotionEvent as any).requestPermission === 'function'
+    ) {
+      try {
+        const permission = await (DeviceMotionEvent as any).requestPermission()
+        if (permission !== 'granted') {
+          console.warn('Motion permission denied')
+        }
+      } catch (err) {
+        console.error('Motion permission error:', err)
+      }
+    }
+
     // 1. Decibel Sensing (Audio)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -105,7 +119,6 @@ export function useSafetySensors(active: boolean) {
         pressureSensor.addEventListener('reading', () => {
           const pressure = pressureSensor.pressure
           setData((prev) => ({ ...prev, pressure }))
-          // Pressure thresholds are tricky, usually looking for sudden drops
         })
         pressureSensor.start()
         sensorsRef.current.push(pressureSensor)
@@ -113,6 +126,30 @@ export function useSafetySensors(active: boolean) {
         console.warn('Barometer failed:', err)
       }
     }
+
+    // 4. Motion & Rotation (Standard API)
+    const handleMotion = (event: DeviceMotionEvent) => {
+      const acc = event.accelerationIncludingGravity
+      if (acc) {
+        // Calculate magnitude of acceleration vector
+        const magnitude = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2)
+        const motionVal = Math.round(magnitude * 10) / 10
+        setData(prev => ({ ...prev, motion: motionVal }))
+        
+        if (magnitude > 30) { // Approx 3G
+          triggerAlert(`[경고] 강한 충격 감지!`)
+        }
+      }
+      
+      const rot = event.rotationRate
+      if (rot) {
+        const rotationVal = Math.round(Math.abs(rot.alpha || 0) + Math.abs(rot.beta || 0) + Math.abs(rot.gamma || 0))
+        setData(prev => ({ ...prev, rotation: rotationVal }))
+      }
+    }
+
+    window.addEventListener('devicemotion', handleMotion)
+    sensorsRef.current.push({ stop: () => window.removeEventListener('devicemotion', handleMotion) })
   }
 
   function stopAll() {
