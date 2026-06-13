@@ -11,12 +11,17 @@ import {
   Settings,
   ShieldAlert,
   Smile,
-  Sparkles,
-  SwitchCamera,
   User,
-  Video,
   Volume2,
 } from 'lucide-react'
+import {
+  IoCall,
+  IoCameraReverse,
+  IoMic,
+  IoMicOff,
+  IoSparkles,
+  IoVideocam,
+} from 'react-icons/io5'
 
 import { PERSONAS } from '#/features/home/personas'
 import { useCall } from '#/features/call/call-store'
@@ -283,7 +288,7 @@ function CallScreen() {
       }}
     >
       <button type="button" aria-label="효과" style={videoCtrlStyle}>
-        <Sparkles size={22} />
+        <IoSparkles size={22} />
       </button>
       <button
         type="button"
@@ -296,7 +301,7 @@ function CallScreen() {
           color: muted ? 'var(--neutral-900)' : '#fff',
         }}
       >
-        {muted ? <MicOff size={22} /> : <Mic size={22} />}
+        {muted ? <IoMicOff size={22} /> : <IoMic size={22} />}
       </button>
       <button
         type="button"
@@ -316,13 +321,13 @@ function CallScreen() {
           boxShadow: 'var(--shadow-coral)',
         }}
       >
-        <PhoneOff size={26} />
+        <IoCall size={26} />
       </button>
       <button type="button" aria-label="카메라 전환" style={videoCtrlStyle}>
-        <SwitchCamera size={22} />
+        <IoCameraReverse size={24} />
       </button>
       <button type="button" aria-label="영상" style={videoCtrlStyle}>
-        <Video size={22} />
+        <IoVideocam size={24} />
       </button>
     </div>
   )
