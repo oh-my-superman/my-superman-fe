@@ -10,6 +10,7 @@ interface AppBarProps {
   title: string
   /** Optional live-status line under the title (with a green dot). */
   status?: string
+  statusActive?: boolean
   actions?: Array<AppBarAction>
 }
 
@@ -30,7 +31,7 @@ const iconBtn: React.CSSProperties = {
  * Shared header for the main tabs (메인 · 지도): brand shield + screen title,
  * an optional live-status line, and right-side icon actions.
  */
-export function AppBar({ title, status, actions = [] }: AppBarProps) {
+export function AppBar({ title, status, statusActive = true, actions = [] }: AppBarProps) {
   return (
     <div style={{ flex: 'none', background: 'var(--surface)' }}>
       <div
@@ -82,7 +83,7 @@ export function AppBar({ title, status, actions = [] }: AppBarProps) {
               width: 8,
               height: 8,
               borderRadius: 99,
-              background: 'var(--success)',
+              background: statusActive ? 'var(--success)' : 'var(--muted-foreground)',
               flex: 'none',
             }}
           />

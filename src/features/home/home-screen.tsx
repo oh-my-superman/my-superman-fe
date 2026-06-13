@@ -148,10 +148,9 @@ export function HomeScreen() {
         <AppBar
           title="나의 슈퍼맨"
           status={
-            companion
-              ? '슈퍼맨이 동행 중 · 위치 공유 켜짐'
-              : '동행 대기 중 · 위치 공유 켜짐'
+            companion ? '보호모드 활성화 · 위험상황 감지 중' : '보호모드 비활성'
           }
+          statusActive={companion}
           actions={[
             { icon: Bell, label: '알림' },
             {
@@ -371,8 +370,6 @@ export function HomeScreen() {
             onClick={() => {}}
           />
         </Card>
-
-
       </div>
 
       <BottomNav />
