@@ -1,0 +1,13 @@
+allowBuilds:
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - esbuild
+  - lightningcss
+  - unrs-resolver
+supportedArchitectures:
+  os:
+    - darwin
+    - linux
+  cpu:
+    - arm64
+    - x64
