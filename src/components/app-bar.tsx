@@ -44,7 +44,7 @@ export function AppBar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 18px 0',
+          padding: '12px 18px 12px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -57,7 +57,41 @@ export function AppBar({
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          {status && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '5px 10px',
+                background: 'var(--neutral-100)',
+                border: 'none',
+                borderRadius: 99,
+              }}
+            >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 99,
+                  background: statusActive
+                    ? 'var(--success)'
+                    : 'var(--muted-foreground)',
+                  flex: 'none',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: statusActive ? 'var(--muted-foreground)' : '#928c86',
+                }}
+              >
+                {status}
+              </span>
+            </div>
+          )}
           {actions.map((a) => {
             const ActionIcon = a.icon
             return (
@@ -74,47 +108,6 @@ export function AppBar({
           })}
         </div>
       </div>
-      {status && (
-        <div
-          style={{
-            padding: '6px 18px 14px',
-            display: 'flex',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '5px 10px',
-              background: 'var(--neutral-100)',
-              border: 'none',
-              borderRadius: 99,
-            }}
-          >
-            <span
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 99,
-                background: statusActive
-                  ? 'var(--success)'
-                  : 'var(--muted-foreground)',
-                flex: 'none',
-              }}
-            />
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: 'var(--muted-foreground)',
-              }}
-            >
-              {status}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

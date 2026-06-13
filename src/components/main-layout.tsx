@@ -2,8 +2,6 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { AppBar } from '#/components/app-bar'
 import { BottomNav } from '#/components/bottom-nav'
-import { Bell } from 'lucide-react'
-import { useNavigate } from '@tanstack/react-router'
 import { useCompanionSession } from '#/features/companion/session-store'
 import type { CompanionStatus } from '#/features/companion/companion-socket'
 import { useCompanionStore } from '#/store/companion'
@@ -22,7 +20,6 @@ function companionStatusLabel(
 }
 
 export function MainLayout({ children }: { children: ReactNode }) {
-  const navigate = useNavigate()
   const companion = useCompanionStore((s) => s.companion)
   const sessionStatus = useCompanionSession((s) => s.status)
   const startSession = useCompanionSession((s) => s.startSession)
@@ -53,9 +50,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
           title="나의 슈퍼맨"
           status={companionStatusLabel(companion, sessionStatus)}
           statusActive={companion && sessionStatus !== 'error'}
-          actions={[
-            { icon: Bell, label: '알림' },
-          ]}
+          actions={[]}
         />
       </div>
 

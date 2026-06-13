@@ -1,9 +1,7 @@
-import { useNavigate } from '@tanstack/react-router'
 import { useRef, useEffect } from 'react'
-import { Zap, Activity, Volume2, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-import { Card } from '#/components/ui/card'
 import { MainLayout } from '#/components/main-layout'
 import { useCompanionSession } from '#/features/companion/session-store'
 import { useCompanionStore } from '#/store/companion'
@@ -106,7 +104,6 @@ function LevelMeter({
  * 보호 화면 — a big AI-companion toggle and real-time level meters.
  */
 export function ProtectionScreen() {
-  const navigate = useNavigate()
   const companion = useCompanionStore((s) => s.companion)
   const setCompanion = useCompanionStore((s) => s.setCompanion)
   const startSession = useCompanionSession((s) => s.startSession)
@@ -350,11 +347,18 @@ export function ProtectionScreen() {
                 fontSize: 14,
                 color: 'var(--neutral-500)',
                 fontWeight: 500,
+                lineHeight: 1.5,
               }}
             >
-              {companion
-                ? '종합적인 위험 상황을 실시간으로 분석하고 있어요'
-                : '탭하여 보호모드를 시작하세요'}
+              {companion ? (
+                <>
+                  종합적인 위험 상황을 <strong>실시간으로 분석</strong>하고 있어요.
+                  <br />
+                  위험 상황으로 판단되면 <strong>슈퍼 통화</strong>로 연결돼요.
+                </>
+              ) : (
+                '탭하여 보호모드를 시작하세요'
+              )}
             </p>
           </div>
         </div>

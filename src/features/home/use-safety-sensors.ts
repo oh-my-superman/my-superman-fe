@@ -35,6 +35,21 @@ export function useSafetySensors(active: boolean) {
     }
   }
 
+  function stopAll() {
+    sensorsRef.current.forEach((s) => s.stop && s.stop())
+    sensorsRef.current = []
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track: MediaStreamTrack) => track.stop())
+      streamRef.current = null
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
+    }
+  }
+
   // Consolidated Risk Assessment
   useEffect(() => {
     if (!active) return
@@ -53,7 +68,6 @@ export function useSafetySensors(active: boolean) {
       // Only count darkness as a risk if there's also suspicious movement or noise
       const isDark = data.lux < 5
       const hasActivity = motionScore > 20 || noiseScore > 25 || rotationScore > 20
-      const luxScore = (isDark && hasActivity) ? 100 : 0
 
       // 3. Weighted Sum (Updated weights: Focus more on physical signals)
       let total = (
@@ -77,8 +91,6 @@ export function useSafetySensors(active: boolean) {
         
         if (finalScore > 80) {
           triggerAlert(`[긴급] 매우 위험한 상황이 감지되었습니다! (위험도: ${finalScore}%)`)
-        } else if (finalScore > 50 && lastAlertTimeRef.current === 0) {
-           // Basic caution logging or silent alert to server could go here
         }
       }
     }
@@ -87,156 +99,145 @@ export function useSafetySensors(active: boolean) {
     return () => clearInterval(timer)
   }, [data, active])
 
-  async function startSensors() {
-    // 0. Request Permissions
-    if ('permissions' in navigator) {
-      try {
-        // Some browsers require explicit permission query for sensors
-        await Promise.all([
-          navigator.permissions.query({ name: 'accelerometer' as any }).catch(() => ({ state: 'granted' })),
-          navigator.permissions.query({ name: 'gyroscope' as any }).catch(() => ({ state: 'granted' })),
-          navigator.permissions.query({ name: 'ambient-light-sensor' as any }).catch(() => ({ state: 'granted' })),
-        ])
-      } catch (e) {
-        console.warn('Permission query not fully supported')
-      }
+  // Sensor Initialization
+  useEffect(() => {
+    if (!active) {
+      stopAll()
+      return
     }
 
-    // 0-1. iOS Motion Permission
-    if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-      try {
-        const permission = await (DeviceMotionEvent as any).requestPermission()
-        if (permission !== 'granted') return
-      } catch (err) {
-        console.error('Motion permission error:', err)
+    async function startSensors() {
+      // 0. Permission Check
+      if ('permissions' in navigator) {
+        try {
+          await Promise.all([
+            navigator.permissions.query({ name: 'accelerometer' as any }).catch(() => ({ state: 'granted' })),
+            navigator.permissions.query({ name: 'gyroscope' as any }).catch(() => ({ state: 'granted' })),
+            navigator.permissions.query({ name: 'ambient-light-sensor' as any }).catch(() => ({ state: 'granted' })),
+          ])
+        } catch (e) {
+          console.warn('Permission query not fully supported')
+        }
       }
-    }
 
-    // 1. Decibel Sensing (Audio)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      const AudioContextCtor = (
-        window as Window & {
-          AudioContext?: typeof AudioContext
-          webkitAudioContext?: typeof AudioContext
+      // 0-1. iOS Motion Permission
+      if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+        try {
+          const permission = await (DeviceMotionEvent as any).requestPermission()
+          if (permission !== 'granted') return
+        } catch (err) {
+          console.error('Motion permission error:', err)
         }
-      ).AudioContext ?? (window as any).webkitAudioContext
-      const audioContext = new AudioContextCtor()
-      audioContextRef.current = audioContext
-
-      const source = audioContext.createMediaStreamSource(stream)
-      const analyser = audioContext.createAnalyser()
-      analyser.fftSize = 256
-      source.connect(analyser)
-
-      const bufferLength = analyser.frequencyBinCount
-      const dataArray = new Uint8Array(bufferLength)
-
-      const checkAudio = () => {
-        if (!active || !audioContextRef.current) return
-        analyser.getByteFrequencyData(dataArray)
-        let sum = 0
-        for (let i = 0; i < bufferLength; i++) {
-          sum += dataArray[i]
-        }
-        const average = sum / bufferLength
-        const db = Math.round(average)
-
-        setData((prev) => ({ ...prev, db }))
-
-        if (db > DEFAULT_THRESHOLDS.decibel) {
-          triggerAlert(`[경고] 높은 소음 감지: ${db}dB`)
-        }
-
-        requestAnimationFrame(checkAudio)
       }
-      checkAudio()
-    } catch (err) {
-      console.warn('Audio sensor failed:', err)
-    }
 
-    // 2. Light Sensor (Generic Sensor API)
-    if ('AmbientLightSensor' in window) {
+      // 1. Decibel Sensing (Audio)
       try {
-        const luxSensor = new (window as any).AmbientLightSensor({ frequency: 2 })
-        luxSensor.addEventListener('reading', () => {
-          const lux = Math.round(luxSensor.lux)
-          setData((prev) => ({ ...prev, lux }))
-          if (lux < DEFAULT_THRESHOLDS.lux) {
-            triggerAlert(`[경고] 급격한 조도 저하 감지: ${lux} lux`)
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        streamRef.current = stream
+        const AudioContextCtor = (
+          window as Window & {
+            AudioContext?: typeof AudioContext
+            webkitAudioContext?: typeof AudioContext
           }
-        })
-        luxSensor.addEventListener('error', (event: any) => {
-          console.warn('Lux sensor error:', event.error.name, event.error.message)
-        })
-        luxSensor.start()
-        sensorsRef.current.push(luxSensor)
-      } catch (err) {
-        console.warn('Light sensor init failed:', err)
-      }
-    }
+        ).AudioContext ?? (window as any).webkitAudioContext
+        const audioContext = new AudioContextCtor()
+        audioContextRef.current = audioContext
 
-    // 3. Barometer (Generic Sensor API)
-    if ('Barometer' in window) {
-      try {
-        const pressureSensor = new (window as any).Barometer({ frequency: 2 })
-        pressureSensor.addEventListener('reading', () => {
-          const pressure = Math.round(pressureSensor.pressure)
-          setData((prev) => ({ ...prev, pressure }))
-        })
-        pressureSensor.addEventListener('error', (event: any) => {
-          console.warn('Barometer error:', event.error.name, event.error.message)
-        })
-        pressureSensor.start()
-        sensorsRef.current.push(pressureSensor)
-      } catch (err) {
-        console.warn('Barometer init failed:', err)
-      }
-    }
+        const source = audioContext.createMediaStreamSource(stream)
+        const analyser = audioContext.createAnalyser()
+        analyser.fftSize = 256
+        source.connect(analyser)
 
-    // 4. Motion & Rotation (Standard API)
-    const handleMotion = (event: DeviceMotionEvent) => {
-      const acc = event.acceleration || event.accelerationIncludingGravity
-      if (acc) {
-        let magnitude = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2)
-        if (!event.acceleration && event.accelerationIncludingGravity) {
-          magnitude = Math.abs(magnitude - 9.81)
+        const bufferLength = analyser.frequencyBinCount
+        const dataArray = new Uint8Array(bufferLength)
+
+        const checkAudio = () => {
+          if (!active || !audioContextRef.current) return
+          analyser.getByteFrequencyData(dataArray)
+          let sum = 0
+          for (let i = 0; i < bufferLength; i++) {
+            sum += dataArray[i]
+          }
+          const average = sum / bufferLength
+          const db = Math.round(average)
+
+          setData((prev) => ({ ...prev, db }))
+
+          if (db > DEFAULT_THRESHOLDS.decibel) {
+            triggerAlert(`[경고] 높은 소음 감지: ${db}dB`)
+          }
+
+          requestAnimationFrame(checkAudio)
         }
-        const motionVal = Math.round(magnitude * 10) / 10
-        setData((prev) => ({ ...prev, motion: motionVal }))
-        if (motionVal > 25) {
-          triggerAlert(`[경고] 강한 충격 감지!`)
+        checkAudio()
+      } catch (err) {
+        console.warn('Audio sensor failed:', err)
+      }
+
+      // 2. Light Sensor
+      if ('AmbientLightSensor' in window) {
+        try {
+          const luxSensor = new (window as any).AmbientLightSensor({ frequency: 2 })
+          luxSensor.addEventListener('reading', () => {
+            const lux = Math.round(luxSensor.lux)
+            setData((prev) => ({ ...prev, lux }))
+            if (lux < DEFAULT_THRESHOLDS.lux) {
+              triggerAlert(`[경고] 급격한 조도 저하 감지: ${lux} lux`)
+            }
+          })
+          luxSensor.start()
+          sensorsRef.current.push(luxSensor)
+        } catch (err) {
+          console.warn('Light sensor init failed:', err)
         }
       }
 
-      const rot = event.rotationRate
-      if (rot) {
-        const rotationVal = Math.round(
-          Math.abs(rot.alpha || 0) + Math.abs(rot.beta || 0) + Math.abs(rot.gamma || 0)
-        )
-        setData((prev) => ({ ...prev, rotation: rotationVal }))
+      // 3. Barometer
+      if ('Barometer' in window) {
+        try {
+          const pressureSensor = new (window as any).Barometer({ frequency: 2 })
+          pressureSensor.addEventListener('reading', () => {
+            const pressure = Math.round(pressureSensor.pressure)
+            setData((prev) => ({ ...prev, pressure }))
+          })
+          pressureSensor.start()
+          sensorsRef.current.push(pressureSensor)
+        } catch (err) {
+          console.warn('Barometer init failed:', err)
+        }
       }
+
+      // 4. Motion & Rotation
+      const handleMotion = (event: DeviceMotionEvent) => {
+        const acc = event.acceleration || event.accelerationIncludingGravity
+        if (acc) {
+          let magnitude = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2)
+          if (!event.acceleration && event.accelerationIncludingGravity) {
+            magnitude = Math.abs(magnitude - 9.81)
+          }
+          const motionVal = Math.round(magnitude * 10) / 10
+          setData((prev) => ({ ...prev, motion: motionVal }))
+          if (motionVal > 25) {
+            triggerAlert(`[경고] 강한 충격 감지!`)
+          }
+        }
+
+        const rot = event.rotationRate
+        if (rot) {
+          const rotationVal = Math.round(
+            Math.abs(rot.alpha || 0) + Math.abs(rot.beta || 0) + Math.abs(rot.gamma || 0)
+          )
+          setData((prev) => ({ ...prev, rotation: rotationVal }))
+        }
+      }
+
+      window.addEventListener('devicemotion', handleMotion)
+      sensorsRef.current.push({ stop: () => window.removeEventListener('devicemotion', handleMotion) })
     }
 
-    window.addEventListener('devicemotion', handleMotion)
-    sensorsRef.current.push({ stop: () => window.removeEventListener('devicemotion', handleMotion) })
-  }
-
-  function stopAll() {
-    sensorsRef.current.forEach((s) => s.stop())
-    sensorsRef.current = []
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
-    }
-
-    if (audioContextRef.current) {
-      audioContextRef.current.close()
-      audioContextRef.current = null
-    }
-  }
+    void startSensors()
+    return () => stopAll()
+  }, [active])
 
   return data
 }
