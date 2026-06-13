@@ -88,7 +88,8 @@ export function BottomNav() {
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: 'var(--coral-600)',
+                  // Pink only on the protection screen; muted elsewhere.
+                  color: active ? 'var(--coral-600)' : 'var(--muted-foreground)',
                 }}
               >
                 {t.label}
