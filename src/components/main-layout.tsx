@@ -3,10 +3,11 @@ import type { ReactNode } from 'react'
 import { AppBar } from '#/components/app-bar'
 import { BottomNav } from '#/components/bottom-nav'
 import { Bell, Settings } from 'lucide-react'
-import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useCompanionSession } from '#/features/companion/session-store'
 import type { CompanionStatus } from '#/features/companion/companion-socket'
 import { useCompanionStore } from '#/store/companion'
+import { startProtectionCoordinator } from '#/features/protection/protection-store'
 
 function companionStatusLabel(
   companion: boolean,
@@ -20,40 +21,23 @@ function companionStatusLabel(
   return '보호모드 활성화'
 }
 
-function screenName(pathname: string): string {
-  if (pathname === '/') return 'home'
-  if (pathname.startsWith('/map')) return 'map'
-  if (pathname.startsWith('/settings')) return 'settings'
-  return 'unknown'
-}
-
 export function MainLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
   const companion = useCompanionStore((s) => s.companion)
   const sessionStatus = useCompanionSession((s) => s.status)
-  const sessionId = useCompanionSession((s) => s.sessionId)
   const startSession = useCompanionSession((s) => s.startSession)
   const endSession = useCompanionSession((s) => s.endSession)
-  const sendCompanionFrame = useCompanionSession((s) => s.send)
+
+  // Drive background protection-voice streaming (보호모드 → voice frames,
+  // paused during calls). Idempotent — only the first call wires it up.
+  useEffect(() => {
+    startProtectionCoordinator()
+  }, [])
 
   useEffect(() => {
     if (companion) void startSession(true)
     else void endSession()
   }, [companion, startSession, endSession])
-
-  useEffect(() => {
-    if (!companion || sessionStatus !== 'ready' || !sessionId) return
-    sendCompanionFrame({
-      type: 'screen.view',
-      session_id: sessionId,
-      data: {
-        screen: screenName(pathname),
-        path: pathname,
-        timestamp: new Date().toISOString(),
-      },
-    })
-  }, [companion, pathname, sendCompanionFrame, sessionId, sessionStatus])
 
   return (
     <div
