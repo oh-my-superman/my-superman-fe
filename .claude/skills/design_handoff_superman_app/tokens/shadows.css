@@ -1,0 +1,20 @@
+/* 나의 슈퍼맨 — Elevation / shadow tokens
+ * Soft, warm-tinted, low-spread. Surfaces float gently; nothing harsh. */
+
+:root {
+  /* Warm shadow color (coral-tinted black) for cohesion with the brand */
+  --shadow-xs: 0 1px 2px rgba(40, 24, 24, 0.06);
+  --shadow-sm:
+    0 1px 3px rgba(40, 24, 24, 0.08), 0 1px 2px rgba(40, 24, 24, 0.04);
+  --shadow-md:
+    0 4px 12px rgba(40, 24, 24, 0.08), 0 2px 4px rgba(40, 24, 24, 0.04);
+  --shadow-lg:
+    0 12px 28px rgba(40, 24, 24, 0.12), 0 4px 8px rgba(40, 24, 24, 0.05);
+  --shadow-xl: 0 24px 48px rgba(40, 24, 24, 0.16);
+
+  /* Brand glow — for the active call FAB / live "동행 중" states */
+  --shadow-coral: 0 8px 24px rgba(240, 128, 128, 0.45);
+
+  /* Focus ring */
+  --ring-width: 3px;
+}

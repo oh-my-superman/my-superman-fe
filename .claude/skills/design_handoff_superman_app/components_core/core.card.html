@@ -1,0 +1,207 @@
+<!-- @dsCard group="Components" viewport="700x720" name="Core components" subtitle="Button · Avatar · Badge · Switch · ListItem · Card · Dialog" -->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../../styles.css" />
+    <style>
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        background: var(--surface);
+        color: var(--foreground);
+        padding: 24px;
+      }
+      h4 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted-foreground);
+        margin: 0 0 12px;
+        font-weight: 700;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script
+      src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+      integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+      integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+      integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+      crossorigin="anonymous"
+    ></script>
+    <script src="../../_ds_bundle.js"></script>
+    <script type="text/babel">
+      const {
+        Button,
+        Avatar,
+        Badge,
+        Switch,
+        ListItem,
+        ListDivider,
+        Card,
+        CardHeader,
+        CardTitle,
+        CardContent,
+        Dialog,
+        DialogHeader,
+        DialogTitle,
+        DialogDescription,
+        DialogFooter,
+      } = window.DesignSystem_b303af
+
+      function Demo() {
+        const [open, setOpen] = React.useState(false)
+        return (
+          <div className="col">
+            <section>
+              <h4>Button</h4>
+              <div className="col">
+                <div className="wrap">
+                  <Button>지금 전화</Button>
+                  <Button variant="secondary">예약</Button>
+                  <Button variant="outline">취소</Button>
+                  <Button variant="ghost">더보기</Button>
+                  <Button variant="destructive">112 신고</Button>
+                  <Button variant="link">도움말</Button>
+                </div>
+                <div className="wrap">
+                  <Button size="sm">Small</Button>
+                  <Button size="default">Default</Button>
+                  <Button size="lg">Large</Button>
+                  <Button disabled>Disabled</Button>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h4>Avatar</h4>
+              <div className="wrap">
+                <Avatar size="sm" fallback="엄" status="online" />
+                <Avatar
+                  size="default"
+                  fallback="👮"
+                  bg="var(--blue-info)"
+                  fg="#fff"
+                />
+                <Avatar size="lg" fallback="연인" status="online" />
+                <Avatar size="xl" fallback="민지" status="busy" />
+              </div>
+            </section>
+
+            <section>
+              <h4>Badge</h4>
+              <div className="wrap">
+                <Badge>기본</Badge>
+                <Badge variant="success" dot>
+                  동행 중
+                </Badge>
+                <Badge variant="accent">예약 22:00</Badge>
+                <Badge variant="danger" dot>
+                  위급
+                </Badge>
+                <Badge variant="warning">대기</Badge>
+                <Badge variant="outline">설정</Badge>
+              </div>
+            </section>
+
+            <section>
+              <h4>List · Switch</h4>
+              <Card flat style={{ borderRadius: 'var(--radius-lg)' }}>
+                <ListItem
+                  leading={<Avatar fallback="엄" status="online" />}
+                  title="엄마"
+                  subtitle="다정한 일상 통화 · 가장 자주 사용"
+                  trailing={
+                    <Badge variant="success" dot>
+                      동행 중
+                    </Badge>
+                  }
+                  chevron
+                  onClick={() => {}}
+                />
+                <ListDivider />
+                <ListItem
+                  leading={
+                    <Avatar fallback="👮" bg="var(--blue-info)" fg="#fff" />
+                  }
+                  title="경찰 톤"
+                  subtitle="강한 억지력"
+                  chevron
+                  onClick={() => {}}
+                />
+                <ListDivider />
+                <ListItem
+                  title="자동 신고"
+                  subtitle="위급 감지 시 보호자에게 전송"
+                  trailing={<Switch defaultChecked />}
+                />
+              </Card>
+            </section>
+
+            <section>
+              <h4>Dialog</h4>
+              <Button variant="destructive" onClick={() => setOpen(true)}>
+                신고 모달 열기
+              </Button>
+              <Dialog
+                open={open}
+                onOpenChange={setOpen}
+                tone="danger"
+                container="fixed"
+              >
+                <DialogHeader>
+                  <DialogTitle>위급 상황이 감지됐어요</DialogTitle>
+                  <DialogDescription>
+                    10초 뒤 보호자에게 위치와 직전 녹음이 전송됩니다.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="destructive"
+                    block
+                    onClick={() => setOpen(false)}
+                  >
+                    지금 신고
+                  </Button>
+                  <Button variant="ghost" block onClick={() => setOpen(false)}>
+                    괜찮아요, 취소
+                  </Button>
+                </DialogFooter>
+              </Dialog>
+            </section>
+          </div>
+        )
+      }
+      ReactDOM.createRoot(document.getElementById('root')).render(<Demo />)
+    </script>
+  </body>
+</html>

@@ -1,0 +1,35 @@
+/* 나의 슈퍼맨 — Typography tokens
+ * Pretendard everywhere. One warm, legible voice for Korean + Latin. */
+
+:root {
+  --font-sans:
+    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  /* Type scale — mobile-first product UI. rem @ 16px base.
+     Intentionally compact: most surfaces are phone-width. */
+  --text-xs: 0.75rem; /* 12 — captions, timestamps */
+  --text-sm: 0.875rem; /* 14 — secondary text, meta */
+  --text-base: 1rem; /* 16 — body */
+  --text-lg: 1.125rem; /* 18 — list titles, emphasis */
+  --text-xl: 1.375rem; /* 22 — screen titles */
+  --text-2xl: 1.75rem; /* 28 — hero numbers, call name */
+  --text-3xl: 2.25rem; /* 36 — display / call timer */
+
+  /* Weights — Pretendard variable */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Line heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+
+  /* Letter spacing — slight negative tracking reads tidy in Korean */
+  --tracking-tight: -0.02em;
+  --tracking-normal: -0.01em;
+}

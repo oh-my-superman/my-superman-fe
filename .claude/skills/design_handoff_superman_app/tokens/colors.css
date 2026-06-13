@@ -1,0 +1,82 @@
+/* 나의 슈퍼맨 (My Superman) — Color tokens
+ * Warm, friendly safety service. Brand = coral #f08080.
+ * Light theme only. Built on the shadcn semantic-token model. */
+
+:root {
+  /* ── Brand: Coral ─────────────────────────────────────────
+     The single brand color. Warm, human, reassuring — never alarming.
+     500 is the canonical brand value (#f08080 / lightcoral). */
+  --coral-50: #fff5f5;
+  --coral-100: #fde8e8;
+  --coral-200: #fad1d1;
+  --coral-300: #f6b4b4;
+  --coral-400: #f39a9a;
+  --coral-500: #f08080; /* ← brand primary */
+  --coral-600: #e56a6a;
+  --coral-700: #cf5050;
+  --coral-800: #ab4040;
+  --coral-900: #8a3636;
+
+  /* ── Warm neutrals ───────────────────────────────────────
+     Stone-family grays with a faint warm tint so the UI reads soft,
+     not clinical. Used for text, surfaces, borders. */
+  --neutral-0: #ffffff;
+  --neutral-50: #faf9f8;
+  --neutral-100: #f4f2f0;
+  --neutral-200: #e9e5e2;
+  --neutral-300: #d8d2cd;
+  --neutral-400: #aca39c;
+  --neutral-500: #7d736c;
+  --neutral-600: #5b524c;
+  --neutral-700: #443d38;
+  --neutral-800: #2a2521;
+  --neutral-900: #1b1714; /* warm near-black */
+
+  /* ── Status ──────────────────────────────────────────────
+     Reserved hues. Emergency red is deliberately distinct from the
+     coral brand so "112 신고" never blends into normal UI. */
+  --red-emergency: #e5484d; /* danger / auto-report / 112 */
+  --green-safe: #2faf6a; /* 안전 / connected / all-clear */
+  --amber-caution: #f5a623; /* 주의 / pending */
+  --blue-info: #4a8cf0; /* neutral info */
+
+  /* ───────────────────────────────────────────────────────
+     Semantic aliases (shadcn model). Reference these in components,
+     not the raw scales above. */
+  --background: var(--neutral-0);
+  --foreground: var(--neutral-900);
+
+  --card: var(--neutral-0);
+  --card-foreground: var(--neutral-900);
+  --popover: var(--neutral-0);
+  --popover-foreground: var(--neutral-900);
+
+  /* surface = the warm app canvas behind cards (e.g. home list bg) */
+  --surface: var(--neutral-50);
+  --surface-foreground: var(--neutral-900);
+
+  --primary: var(--coral-500);
+  --primary-foreground: #ffffff;
+  --primary-hover: var(--coral-600);
+  --primary-active: var(--coral-700);
+
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--neutral-800);
+
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-500);
+
+  --accent: var(--coral-50);
+  --accent-foreground: var(--coral-700);
+
+  --destructive: var(--red-emergency);
+  --destructive-foreground: #ffffff;
+  --success: var(--green-safe);
+  --success-foreground: #ffffff;
+  --warning: var(--amber-caution);
+  --warning-foreground: var(--neutral-900);
+
+  --border: var(--neutral-200);
+  --input: var(--neutral-200);
+  --ring: var(--coral-400);
+}

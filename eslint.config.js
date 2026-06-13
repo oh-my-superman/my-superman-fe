@@ -23,6 +23,7 @@ export default [
       '.nitro',
       '.tanstack',
       '.vercel',
+      '.claude',
       'src/routeTree.gen.ts',
     ],
   },
