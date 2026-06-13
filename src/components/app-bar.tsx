@@ -44,7 +44,7 @@ export function AppBar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 18px 12px',
+          padding: '12px 18px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -65,12 +65,12 @@ export function AppBar({
                 alignItems: 'center',
                 gap: 6,
                 padding: '5px 12px',
-                background: '#f08080',
-                opacity: 0.7,
+                background: statusActive ? '#f08080' : 'var(--neutral-100)',
+                opacity: statusActive ? 0.7 : 1,
                 border: 'none',
                 borderRadius: 99,
               }}
-              >
+            >
               <span
                 style={{
                   width: 6,
@@ -78,7 +78,7 @@ export function AppBar({
                   borderRadius: 99,
                   background: statusActive
                     ? '#ffffff'
-                    : 'rgba(255, 255, 255, 0.4)',
+                    : 'var(--muted-foreground)',
                   flex: 'none',
                 }}
               />
@@ -86,13 +86,12 @@ export function AppBar({
                 style={{
                   fontSize: 11,
                   fontWeight: 700,
-                  color: '#ffffff',
+                  color: statusActive ? '#ffffff' : '#928c86',
                   letterSpacing: '-0.01em',
                 }}
               >
                 {status}
               </span>
-              </div>
             </div>
           )}
           {actions.map((a) => {
