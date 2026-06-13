@@ -1,5 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Phone, Plus, Sparkles, MessageCircle, Heart, Shield, ShieldAlert } from 'lucide-react'
+import {
+  Phone,
+  Plus,
+  Sparkles,
+  MessageCircle,
+  Heart,
+  Shield,
+  ShieldAlert,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 
@@ -157,6 +165,7 @@ export function CallScreen() {
               background: 'var(--neutral-100)',
               display: 'flex',
               alignItems: 'center',
+              gap: 4,
               color: 'var(--neutral-600)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
@@ -169,6 +178,7 @@ export function CallScreen() {
               e.currentTarget.style.background = 'var(--neutral-100)'
             }}
           >
+            <Plus size={14} strokeWidth={2.5} />
             <span style={{ fontSize: 12, fontWeight: 700 }}>세이프 단어 관리</span>
           </button>
         </div>
@@ -181,18 +191,16 @@ export function CallScreen() {
                 leading={
                   <Avatar
                     fallback={
-                      p.icon ? (
-                        (() => {
-                          const Icon = ICON_MAP[p.icon]
-                          return Icon ? (
-                            <Icon size={20} strokeWidth={2.5} />
-                          ) : (
-                            p.glyph
-                          )
-                        })()
-                      ) : (
-                        p.glyph
-                      )
+                      p.icon
+                        ? (() => {
+                            const Icon = ICON_MAP[p.icon]
+                            return Icon ? (
+                              <Icon size={20} strokeWidth={2.5} />
+                            ) : (
+                              p.glyph
+                            )
+                          })()
+                        : p.glyph
                     }
                     bg={p.bg}
                     fg={p.fg}
@@ -287,9 +295,9 @@ export function CallScreen() {
                 outline: 'none',
               }}
             />
-            </div>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label
               style={{
                 fontSize: 13,
@@ -337,9 +345,9 @@ export function CallScreen() {
                 </button>
               ))}
             </div>
-            </div>
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label
               style={{
                 fontSize: 13,
@@ -362,7 +370,7 @@ export function CallScreen() {
                 outline: 'none',
               }}
             />
-            </div>
+          </div>
 
           <button
             onClick={() => {
@@ -391,7 +399,7 @@ export function CallScreen() {
       <Dialog
         open={safeWordModalOpen}
         onOpenChange={setSafeWordModalOpen}
-        title="세이프 단어 관리"
+        title="세이프 단어"
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <p
@@ -402,8 +410,8 @@ export function CallScreen() {
               margin: 0,
             }}
           >
-            통화 중 이 단어를 말하면 AI가 위험 상황으로 즉시 인지하고
-            보호 조치를 시작합니다.
+            통화 중 이 단어를 말하면 AI가 위험 상황으로 즉시 인지하고 보호
+            조치를 시작합니다.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
