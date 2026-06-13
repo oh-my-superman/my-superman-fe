@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import { useCompanionStore } from '#/store/companion'
 import { useCompanionSession } from '../companion/session-store'
 import { useCall } from '../call/call-store'
+import { buildDangerReport } from '../report/build-report'
 import { ProtectionVoiceController } from './protection-voice'
 import type { CompanionFrame } from '../companion/companion-socket'
 
@@ -51,6 +52,32 @@ function recompute(): void {
 }
 
 let initialized = false
+let lastScreamReportKey: string | null = null
+
+function screamEventKey(frame: CompanionFrame): string {
+  const eventId = frame.event_id
+  if (typeof eventId === 'string' && eventId) return eventId
+  const ts = frame.ts_ms
+  if (typeof ts === 'string' || typeof ts === 'number') return String(ts)
+  const source = typeof frame.source === 'string' ? frame.source : 'unknown'
+  return `scream:${source}`
+}
+
+function reportProtectionScream(frame: CompanionFrame): void {
+  const callActive = ACTIVE_CALL_STATUSES.includes(useCall.getState().status)
+  if (callActive) return
+
+  const eventKey = screamEventKey(frame)
+  if (lastScreamReportKey === eventKey) return
+  lastScreamReportKey = eventKey
+
+  const sessionId = useCompanionSession.getState().sessionId
+  if (!sessionId) return
+
+  void buildDangerReport({ sessionId, cause: 'scream' }).catch((err) => {
+    console.error('[report] protection scream report build failed', err)
+  })
+}
 
 /**
  * Activate the coordinator once for the app lifetime. Idempotent; safe to call
@@ -67,8 +94,10 @@ export function startProtectionCoordinator(): void {
         screaming: true,
         lastScreamScore: typeof frame.score === 'number' ? frame.score : null,
       })
+      reportProtectionScream(frame)
     } else if (frame.type === 'scream_cleared') {
       useProtection.setState({ screaming: false })
+      lastScreamReportKey = null
     }
   })
 

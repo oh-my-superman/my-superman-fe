@@ -12,6 +12,8 @@ export interface ReportBuildResult {
   generatedAt: string | null
 }
 
+export type ReportBuildCause = 'safeword' | 'scream'
+
 function readString(value: unknown, keys: Array<string>): string | null {
   if (!value || typeof value !== 'object') return null
   const record = value as Record<string, unknown>
@@ -42,26 +44,47 @@ async function getCurrentGps(): Promise<ReportGps | null> {
   })
 }
 
-export async function buildSafewordReport(params: {
+function reportContext(cause: ReportBuildCause): {
+  transcript: string | null
+  userNote: string
+} {
+  if (cause === 'scream') {
+    return {
+      transcript:
+        '비명 소리가 감지되었습니다. 사용자가 긴급 상황을 알렸을 가능성이 있습니다.',
+      userNote: '비명 감지 자동 신고 사용자',
+    }
+  }
+
+  return {
+    transcript: null,
+    userNote: '세이프워드 자동 신고 사용자',
+  }
+}
+
+export async function buildDangerReport(params: {
   sessionId: string
-  safeword: string
+  cause: ReportBuildCause
+  safeword?: string
 }): Promise<ReportBuildResult> {
   const gps = await getCurrentGps()
+  const context = reportContext(params.cause)
+  const body = {
+    session_id: params.sessionId,
+    transcript: context.transcript,
+    user: {
+      name: 'Daniel',
+      note: context.userNote,
+    },
+    gps,
+    photos: [],
+    ...(params.safeword ? { safeword: params.safeword } : {}),
+  }
 
   const response = await fetch(serviceUrl('/api/report/build'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      session_id: params.sessionId,
-      transcript: null,
-      user: {
-        name: 'Daniel',
-        note: '세이프워드 자동 신고 사용자',
-      },
-      gps,
-      photos: [],
-      safeword: params.safeword,
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!response.ok) {
