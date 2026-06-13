@@ -65,8 +65,9 @@ export function AppBar({
                 alignItems: 'center',
                 gap: 6,
                 padding: '5px 12px',
-                background: statusActive ? '#f08080' : 'var(--neutral-100)',
-                opacity: statusActive ? 0.7 : 1,
+                background: statusActive
+                  ? 'rgba(240, 128, 128, 0.7)'
+                  : 'var(--neutral-100)',
                 border: 'none',
                 borderRadius: 99,
               }}
