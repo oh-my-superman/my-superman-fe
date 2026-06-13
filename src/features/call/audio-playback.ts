@@ -15,9 +15,14 @@ export class AudioPlayback {
   #ctx: AudioContext
   #nextStart = 0
   #sources = new Set<AudioBufferSourceNode>()
+  /** Called with `true` while audio is actually playing (AI speaking). */
+  #onActiveChange?: (active: boolean) => void
+  #active = false
+  #idleTimer: ReturnType<typeof setTimeout> | null = null
 
-  constructor(context: AudioContext) {
+  constructor(context: AudioContext, onActiveChange?: (active: boolean) => void) {
     this.#ctx = context
+    this.#onActiveChange = onActiveChange
   }
 
   enqueue(samples: Int16Array): void {
@@ -36,6 +41,9 @@ export class AudioPlayback {
 
     this.#sources.add(node)
     node.onended = () => this.#sources.delete(node)
+
+    this.#setActive(true)
+    this.#scheduleIdleCheck()
   }
 
   /** Barge-in: stop and drop everything currently queued or playing. */
@@ -50,5 +58,30 @@ export class AudioPlayback {
     })
     this.#sources.clear()
     this.#nextStart = 0
+    this.#clearIdleTimer()
+    this.#setActive(false)
+  }
+
+  /** Mark playback idle once the queue is expected to have drained. */
+  #scheduleIdleCheck(): void {
+    this.#clearIdleTimer()
+    const remainingMs = (this.#nextStart - this.#ctx.currentTime) * 1000 + 120
+    this.#idleTimer = setTimeout(
+      () => this.#setActive(false),
+      Math.max(0, remainingMs),
+    )
+  }
+
+  #clearIdleTimer(): void {
+    if (this.#idleTimer) {
+      clearTimeout(this.#idleTimer)
+      this.#idleTimer = null
+    }
+  }
+
+  #setActive(active: boolean): void {
+    if (active === this.#active) return
+    this.#active = active
+    this.#onActiveChange?.(active)
   }
 }

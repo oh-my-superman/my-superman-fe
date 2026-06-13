@@ -29,6 +29,8 @@ export interface DangerEvent {
 
 export interface CallListeners {
   onStatus: (status: CallStatus) => void
+  /** True while AI audio is playing (speaking), false while idle (listening). */
+  onSpeaking: (speaking: boolean) => void
   onDanger: (danger: DangerEvent) => void
   onError: (message: string) => void
 }
@@ -83,7 +85,9 @@ export class CallController {
     // resume them now and again on the first touch as a fallback.
     this.#captureCtx = new AudioContext({ sampleRate: 16000 })
     this.#playbackCtx = new AudioContext()
-    this.#playback = new AudioPlayback(this.#playbackCtx)
+    this.#playback = new AudioPlayback(this.#playbackCtx, (speaking) =>
+      this.#listeners.onSpeaking?.(speaking),
+    )
     void this.#captureCtx.resume()
     void this.#playbackCtx.resume()
     this.#resumeOnGesture()
