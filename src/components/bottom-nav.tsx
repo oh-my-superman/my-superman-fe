@@ -73,7 +73,9 @@ export function BottomNav() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: 'none',
+                  border: companion
+                    ? '4px solid var(--background)'
+                    : '2px solid var(--coral-200)',
                   boxShadow: companion
                     ? 'var(--shadow-coral)'
                     : 'var(--shadow-md)',
