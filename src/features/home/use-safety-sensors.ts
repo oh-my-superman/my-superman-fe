@@ -89,7 +89,7 @@ export function useSafetySensors(active: boolean) {
 
   async function startSensors() {
     // 0. Request Permissions
-    if (navigator.permissions) {
+    if ('permissions' in navigator) {
       try {
         // Some browsers require explicit permission query for sensors
         await Promise.all([
@@ -116,7 +116,13 @@ export function useSafetySensors(active: boolean) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const AudioContextCtor = (
+        window as Window & {
+          AudioContext?: typeof AudioContext
+          webkitAudioContext?: typeof AudioContext
+        }
+      ).AudioContext ?? (window as any).webkitAudioContext
+      const audioContext = new AudioContextCtor()
       audioContextRef.current = audioContext
 
       const source = audioContext.createMediaStreamSource(stream)

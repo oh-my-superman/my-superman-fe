@@ -119,7 +119,9 @@ function CallScreen() {
     setReport({ status: 'building', result: null, error: null })
     buildSafewordReport({ sessionId, safeword: phrase })
       .then((result) => {
-        if (!cancelled) setReport({ status: 'ready', result, error: null })
+        if (cancelled) return
+        setReport({ status: 'ready', result, error: null })
+        stop()
       })
       .catch((err) => {
         if (cancelled) return
@@ -134,7 +136,7 @@ function CallScreen() {
     return () => {
       cancelled = true
     }
-  }, [danger])
+  }, [danger, stop])
 
   const endCall = () => {
     stop()
