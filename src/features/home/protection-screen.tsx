@@ -124,6 +124,15 @@ export function ProtectionScreen() {
   const getRotationPercent = (r: number) => Math.min(100, (r / 500) * 100)
   const getDbPercent = (db: number) => Math.min(100, (db / 100) * 100)
 
+  const getStatusInfo = () => {
+    const score = sensorData.dangerScore
+    if (score > 80) return { label: '긴급 위험 감지', color: 'var(--red-emergency)', bg: '#fef2f2' }
+    if (score > 40) return { label: '주변 상황 주의', color: 'var(--amber-caution)', bg: '#fffbeb' }
+    return { label: '실시간 보호 중', color: 'var(--green-safe)', bg: '#f0fdf4' }
+  }
+
+  const status = getStatusInfo()
+
   useEffect(() => {
     if (companion) void startSession(true)
     else void endSession()
@@ -154,14 +163,12 @@ export function ProtectionScreen() {
       >
         {/* Large Superman Hero Toggle */}
         <div
-          onClick={() => setCompanion(!companion)}
           style={{
             flex: '1.2',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
             position: 'relative',
           }}
         >
@@ -182,7 +189,7 @@ export function ProtectionScreen() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  style={{ position: 'absolute', inset: -20 }}
+                  style={{ position: 'absolute', inset: -20, pointerEvents: 'none' }}
                 >
                   <div
                     className="animate-sm-hero-pulse"
@@ -200,6 +207,7 @@ export function ProtectionScreen() {
             </AnimatePresence>
 
             <div
+              onClick={() => setCompanion(!companion)}
               style={{
                 width: '100%',
                 height: '100%',
@@ -211,6 +219,7 @@ export function ProtectionScreen() {
                   ? 'var(--shadow-coral)'
                   : 'var(--shadow-sm)',
                 transition: 'all .4s ease',
+                cursor: 'pointer',
               }}
             >
               <div
@@ -263,34 +272,60 @@ export function ProtectionScreen() {
           </div>
 
           <div style={{ marginTop: 24, textAlign: 'center' }}>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 900,
-                color: companion ? 'var(--coral-600)' : 'var(--foreground)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-              }}
-            >
+            <AnimatePresence mode="wait">
               {companion ? (
-                <ShieldCheck size={24} />
+                <motion.div
+                  key="active-status"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 16px',
+                    borderRadius: 99,
+                    background: status.bg,
+                    color: status.color,
+                    border: `1px solid ${status.color}30`,
+                    marginBottom: 10,
+                  }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    style={{ width: 8, height: 8, borderRadius: 99, background: 'currentColor' }}
+                  />
+                  <span style={{ fontSize: 15, fontWeight: 800 }}>{status.label}</span>
+                  <span style={{ fontSize: 13, opacity: 0.8, fontWeight: 600 }}>{sensorData.dangerScore}%</span>
+                </motion.div>
               ) : (
-                <ShieldAlert size={24} />
+                <div
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 900,
+                    color: 'var(--foreground)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    marginBottom: 4,
+                  }}
+                >
+                  <ShieldAlert size={24} />
+                  보호 모드 해제됨
+                </div>
               )}
-              {companion ? '보호 모드 작동 중' : '보호 모드 해제됨'}
-            </div>
+            </AnimatePresence>
             <p
               style={{
                 fontSize: 14,
                 color: 'var(--neutral-500)',
-                marginTop: 6,
                 fontWeight: 500,
               }}
             >
               {companion
-                ? '주변 환경을 실시간으로 감시합니다'
+                ? '주변 환경의 위험 요소를 통합 분석하고 있습니다'
                 : '탭하여 실시간 감지를 시작하세요'}
             </p>
           </div>
