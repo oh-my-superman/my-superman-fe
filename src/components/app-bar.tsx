@@ -87,10 +87,9 @@ export function AppBar({
               alignItems: 'center',
               gap: 6,
               padding: '5px 10px',
-              background: 'var(--card)',
-              border: '1px solid var(--border)',
+              background: 'var(--neutral-100)',
+              border: 'none',
               borderRadius: 99,
-              boxShadow: 'var(--shadow-sm)',
             }}
           >
             <span
