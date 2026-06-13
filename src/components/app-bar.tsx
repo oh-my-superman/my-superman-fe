@@ -8,8 +8,10 @@ export interface AppBarAction {
 
 interface AppBarProps {
   title: string
-  /** Optional live-status line under the title (with a green dot). */
+  /** Optional status label (e.g. "보호모드") */
   status?: string
+  /** Optional status value (e.g. "ON", "OFF") shown in a chip. */
+  statusValue?: string
   statusActive?: boolean
   actions?: Array<AppBarAction>
 }
@@ -34,6 +36,7 @@ const iconBtn: React.CSSProperties = {
 export function AppBar({
   title,
   status,
+  statusValue,
   statusActive = true,
   actions = [],
 }: AppBarProps) {
@@ -44,7 +47,7 @@ export function AppBar({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '12px 18px',
+          padding: '18px 18px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -57,38 +60,60 @@ export function AppBar({
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {status && (
             <div
-              className={statusActive ? 'animate-sm-chip-pulse' : ''}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '0 4px',
               }}
             >
               <span
                 style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 99,
-                  background: statusActive
-                    ? 'var(--success)'
-                    : 'var(--muted-foreground)',
-                  flex: 'none',
-                }}
-              />
-              <span
-                style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: statusActive ? 'var(--success)' : 'var(--muted-foreground)',
+                  color: 'var(--neutral-500)',
                   letterSpacing: '-0.01em',
                 }}
               >
                 {status}
               </span>
+              <div
+                className={statusActive ? 'animate-sm-chip-pulse' : ''}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '4px 10px',
+                  background: statusActive
+                    ? 'rgba(240, 128, 128, 0.7)'
+                    : 'var(--neutral-100)',
+                  borderRadius: 99,
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 99,
+                    background: statusActive
+                      ? 'var(--success)'
+                      : 'var(--muted-foreground)',
+                    flex: 'none',
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 900,
+                    color: statusActive ? '#ffffff' : 'var(--muted-foreground)',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {statusValue || (statusActive ? 'ON' : 'OFF')}
+                </span>
+              </div>
             </div>
           )}
           {actions.map((a) => {

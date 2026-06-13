@@ -3,21 +3,8 @@ import type { ReactNode } from 'react'
 import { AppBar } from '#/components/app-bar'
 import { BottomNav } from '#/components/bottom-nav'
 import { useCompanionSession } from '#/features/companion/session-store'
-import type { CompanionStatus } from '#/features/companion/companion-socket'
 import { useCompanionStore } from '#/store/companion'
 import { startProtectionCoordinator } from '#/features/protection/protection-store'
-
-function companionStatusLabel(
-  companion: boolean,
-  status: CompanionStatus,
-): string {
-  if (!companion) return '보호모드 비활성'
-  if (status === 'ready') return '보호모드 활성화 · 서비스 연결됨'
-  if (status === 'connecting') return '보호모드 활성화 · 서비스 연결 중'
-  if (status === 'closing') return '보호모드 종료 중'
-  if (status === 'error') return '보호모드 활성화 · 서비스 연결 실패'
-  return '보호모드 활성화'
-}
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const companion = useCompanionStore((s) => s.companion)
@@ -48,7 +35,8 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <div style={{ background: '#ffffff', flex: 'none' }}>
         <AppBar
           title="나의 슈퍼맨"
-          status={companionStatusLabel(companion, sessionStatus)}
+          status="보호모드"
+          statusValue={companion ? 'ON' : 'OFF'}
           statusActive={companion && sessionStatus !== 'error'}
           actions={[]}
         />
