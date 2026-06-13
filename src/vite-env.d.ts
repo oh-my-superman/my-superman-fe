@@ -7,16 +7,22 @@ interface ImportMetaEnv {
   /**
    * Base origin of mysuperman-service, e.g. `http://localhost:8080`.
    * REST calls use this directly and WebSocket calls derive `ws(s)://` from it.
+   * (Exposed via the `API_` envPrefix in vite.config.ts.)
    */
-  readonly VITE_API_BASE_URL?: string
-  /** CCTV endpoint path under `VITE_API_BASE_URL`. */
+  readonly API_BASE_URL?: string
+  /** CCTV endpoint path under `API_BASE_URL`. */
   readonly VITE_CCTV_API_PATH?: string
-  /** Safe-house endpoint path under `VITE_API_BASE_URL`. */
+  /** Safe-house endpoint path under `API_BASE_URL`. */
   readonly VITE_SAFEHOUSE_API_PATH?: string
+  /**
+   * Presigned-upload endpoint path under `API_BASE_URL`.
+   * Default `/api/uploads/presign`. The BE signs an S3 PUT URL here.
+   */
+  readonly VITE_PRESIGN_API_PATH?: string
   /**
    * Base origin of the BE realtime server, e.g. `ws://localhost:8080` (or
    * `wss://…` in prod). The `/ws/companion` path is appended automatically.
-   * Optional compatibility override; `VITE_API_BASE_URL` is preferred.
+   * Optional compatibility override; `API_BASE_URL` is preferred.
    */
   readonly VITE_WS_BASE_URL?: string
 }

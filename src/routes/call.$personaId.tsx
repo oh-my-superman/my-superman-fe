@@ -4,6 +4,7 @@ import { Mic, MicOff, PhoneOff, ShieldAlert } from 'lucide-react'
 
 import { PERSONAS } from '#/features/home/personas'
 import { useCall } from '#/features/call/call-store'
+import { useCameraEvidence } from '#/features/capture/use-camera-evidence'
 
 export const Route = createFileRoute('/call/$personaId')({
   component: CallScreen,
@@ -35,6 +36,9 @@ function CallScreen() {
   const toggleMute = useCall((s) => s.toggleMute)
   const dismissDanger = useCall((s) => s.dismissDanger)
 
+  // Capture camera frames to S3 evidence only while the call is live.
+  const evidenceVideoRef = useCameraEvidence(status === 'live')
+
   // Auto-start the call on mount, end it on leave.
   useEffect(() => {
     start(persona.id)
@@ -56,6 +60,22 @@ function CallScreen() {
         padding: 24,
       }}
     >
+      {/* Hidden camera feed — frames are grabbed for S3 evidence during the call. */}
+      <video
+        ref={evidenceVideoRef}
+        muted
+        playsInline
+        autoPlay
+        aria-hidden
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          opacity: 0,
+          pointerEvents: 'none',
+        }}
+      />
+
       {/* Persona identity + status */}
       <div
         style={{

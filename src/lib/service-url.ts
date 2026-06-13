@@ -22,7 +22,7 @@ function httpToWsBase(httpBase: string): string {
 }
 
 export function serviceHttpBase(): string {
-  const configured = import.meta.env.VITE_API_BASE_URL?.trim()
+  const configured = import.meta.env.API_BASE_URL?.trim()
   return trimTrailingSlash(
     configured || pageHostHttpBase() || DEFAULT_HTTP_BASE,
   )

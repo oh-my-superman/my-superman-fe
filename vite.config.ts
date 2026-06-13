@@ -10,6 +10,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
+  // Expose `API_*` env vars to client code in addition to Vite's default
+  // `VITE_*` (so `import.meta.env.API_BASE_URL` is available).
+  envPrefix: ['VITE_', 'API_'],
   // Nitro auto-detects the Vercel build environment and emits the Build Output API
   // format, so no Vercel-specific config is needed beyond this plugin.
   plugins: [
