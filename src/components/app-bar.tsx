@@ -65,7 +65,7 @@ export function AppBar({
                 alignItems: 'center',
                 gap: 6,
                 padding: '5px 10px',
-                background: 'var(--neutral-100)',
+                background: 'rgba(0, 0, 0, 0.05)',
                 border: 'none',
                 borderRadius: 99,
               }}
