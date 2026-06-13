@@ -138,7 +138,42 @@ export function CallScreen() {
           </p>
         </div>
 
-        <SectionLabel>최근 통화 · 페르소나</SectionLabel>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            paddingRight: 20,
+          }}
+        >
+          <SectionLabel>최근 통화 · 페르소나</SectionLabel>
+          <button
+            type="button"
+            onClick={() => setSafeWordModalOpen(true)}
+            style={{
+              padding: '6px 10px',
+              borderRadius: 8,
+              border: '1px solid var(--coral-100)',
+              background: 'var(--coral-50)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              color: 'var(--coral-600)',
+              cursor: 'pointer',
+              transition: 'background 0.2s ease',
+              marginBottom: 6, // Align with the label bottom
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = 'var(--coral-100)'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'var(--coral-50)'
+            }}
+          >
+            <Shield size={14} strokeWidth={2.5} />
+            <span style={{ fontSize: 12, fontWeight: 700 }}>세이프 단어 관리</span>
+          </button>
+        </div>
 
         <div style={{ paddingBottom: 40 }}>
           {PERSONAS.map((p, i) => (
@@ -173,41 +208,7 @@ export function CallScreen() {
                   </span>
                 }
                 subtitle={p.tagline}
-                trailing={
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-                  >
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSafeWordModalOpen(true)
-                      }}
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: '50%',
-                        border: 'none',
-                        background: 'transparent',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--coral-500)',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s ease',
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'var(--coral-50)'
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                      }}
-                    >
-                      <Shield size={20} strokeWidth={2.5} />
-                    </button>
-                    <CallAction onCall={() => callPersona(p.id)} />
-                  </div>
-                }
+                trailing={<CallAction onCall={() => callPersona(p.id)} />}
                 onClick={() => callPersona(p.id)}
               />
             </div>
