@@ -10,6 +10,7 @@ import { MainLayout } from '#/components/main-layout'
 import { PERSONAS } from '#/features/home/personas'
 import { useCompanionSession } from '#/features/companion/session-store'
 import { useCompanionStore } from '#/store/companion'
+import { useSafetySensors } from '#/features/home/use-safety-sensors'
 
 /** Per-persona call + video-call actions (right side of each roster row). */
 function CallActions({
@@ -120,6 +121,7 @@ export function HomeScreen() {
   const setCompanion = useCompanionStore((s) => s.setCompanion)
   const startSession = useCompanionSession((s) => s.startSession)
   const endSession = useCompanionSession((s) => s.endSession)
+  const sensorData = useSafetySensors(companion)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const callPersona = (id: string) =>
@@ -284,9 +286,30 @@ export function HomeScreen() {
             >
               {companion
                 ? '위험한 상황을 감지하고 있어요.'
-                : '탭하여 안전모드를 활성화하세요'}
+                : '탭하여 보호모드를 활성화하세요'}
             </div>
-          </div>
+
+            {companion && (
+              <div
+                style={{
+                  marginTop: 12,
+                  display: 'flex',
+                  gap: 12,
+                  justifyContent: 'center',
+                }}
+              >
+                <div style={{ fontSize: '11px', color: 'var(--coral-500)', fontWeight: 600 }}>
+                  Light: {sensorData.lux} lx
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--coral-500)', fontWeight: 600 }}>
+                  Baro: {sensorData.pressure} hPa
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--coral-500)', fontWeight: 600 }}>
+                  Noise: {sensorData.db} dB
+                </div>
+              </div>
+            )}
+            </div>
         </div>
 
         {/* Personas */}
