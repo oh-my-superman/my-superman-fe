@@ -27,7 +27,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: '나의 슈퍼맨',
       },
     ],
     links: [
@@ -42,12 +42,14 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <div className="sm-viewport">
+          <div className="sm-screen">{children}</div>
+        </div>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
