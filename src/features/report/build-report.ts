@@ -72,6 +72,7 @@ async function createDangerReportBody(params: DangerReportRequest) {
   const gps = await getCurrentGps()
   const context = reportContext(params.cause)
   return {
+    user_id: 1,
     session_id: params.sessionId,
     transcript: context.transcript,
     user: {
