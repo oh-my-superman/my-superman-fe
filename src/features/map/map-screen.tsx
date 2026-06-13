@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk'
 import { debounce } from 'es-toolkit'
-import { Camera, Crosshair, Home } from 'lucide-react'
+import { Cctv, Crosshair, Home } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { Badge } from '#/components/ui/badge'
@@ -321,7 +321,7 @@ function KakaoCanvas({
         >
           <PinMarker
             color={CCTV_COLOR}
-            icon={Camera}
+            icon={Cctv}
             size={30}
             active={selectedId === c.id}
             onClick={() => onSelect(c.id, { lat: c.lat, lng: c.lng })}
@@ -616,7 +616,7 @@ function SpotIcon({ safe = false }: { safe?: boolean }) {
         flex: 'none',
       }}
     >
-      {safe ? <Home size={19} /> : <Camera size={19} />}
+      {safe ? <Home size={19} /> : <Cctv size={19} />}
     </span>
   )
 }

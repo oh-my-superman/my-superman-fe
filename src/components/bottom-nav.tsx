@@ -9,9 +9,9 @@ interface Tab {
 }
 
 const TABS: Array<Tab> = [
-  { to: '/', icon: Phone, label: '통화' },
-  { to: '/protection', icon: Shield, label: '보호' },
-  { to: '/map', icon: Map, label: '지도' },
+  { to: '/', icon: Phone, label: '슈퍼 통화' },
+  { to: '/protection', icon: Shield, label: '보호 모드' },
+  { to: '/map', icon: Map, label: '안전 지도' },
 ]
 
 /** Shared tab bar: 통화 · 보호 · 지도. Active tab derived from the route. */
@@ -26,7 +26,7 @@ export function BottomNav() {
         display: 'flex',
         borderTop: 'none',
         background: 'var(--background)',
-        padding: '8px 0 4px',
+        padding: '8px 0 8px',
       }}
     >
       {TABS.map((t) => {
