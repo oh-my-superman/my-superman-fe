@@ -1,15 +1,14 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useState, useRef, useEffect } from 'react'
-import { Bell, Phone, Plus, Settings, Video } from 'lucide-react'
+import { useRef, useEffect } from 'react'
+import { Phone, Plus, Video } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Avatar } from '#/components/ui/avatar'
 import { Card } from '#/components/ui/card'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
-import { Switch } from '#/components/ui/switch'
-import { AppBar } from '#/components/app-bar'
-import { BottomNav } from '#/components/bottom-nav'
+import { MainLayout } from '#/components/main-layout'
 import { PERSONAS } from '#/features/home/personas'
+import { useCompanionStore } from '#/store/companion'
 
 /** Per-persona call + video-call actions (right side of each roster row). */
 function CallActions({
@@ -116,7 +115,8 @@ function SectionLabel({
  */
 export function HomeScreen() {
   const navigate = useNavigate()
-  const [companion, setCompanion] = useState(true)
+  const companion = useCompanionStore((s) => s.companion)
+  const setCompanion = useCompanionStore((s) => s.setCompanion)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const callPersona = (id: string) =>
@@ -136,32 +136,7 @@ export function HomeScreen() {
   }, [companion])
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: 'var(--surface)',
-      }}
-    >
-      <div style={{ background: '#ffffff' }}>
-        <AppBar
-          title="나의 슈퍼맨"
-          status={
-            companion ? '보호모드 활성화 · 위험상황 감지 중' : '보호모드 비활성'
-          }
-          statusActive={companion}
-          actions={[
-            { icon: Bell, label: '알림' },
-            {
-              icon: Settings,
-              label: '설정',
-              onClick: () => navigate({ to: '/settings' }),
-            },
-          ]}
-        />
-      </div>
-
+    <MainLayout>
       <div
         style={{
           flex: 1,
@@ -370,9 +345,7 @@ export function HomeScreen() {
             onClick={() => {}}
           />
         </Card>
-      </div>
-
-      <BottomNav />
-    </div>
-  )
-}
+        </div>
+        </MainLayout>
+        )
+        }

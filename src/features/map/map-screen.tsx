@@ -3,13 +3,12 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk'
 import { debounce } from 'es-toolkit'
-import { Camera, Crosshair, Home, Layers } from 'lucide-react'
+import { Camera, Crosshair, Home } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { Badge } from '#/components/ui/badge'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
-import { AppBar } from '#/components/app-bar'
-import { BottomNav } from '#/components/bottom-nav'
+import { MainLayout } from '#/components/main-layout'
 import { SAFE_HOUSES, SEOLLEUNG_CENTER } from '#/features/map/spots'
 import { fetchNearbyCctv } from '#/features/map/cctv'
 import type { Bbox } from '#/features/map/cctv'
@@ -381,20 +380,7 @@ export function MapScreen() {
   }, [])
 
   return (
-    <div
-      style={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--surface)',
-      }}
-    >
-      <AppBar
-        title="안전 지도"
-        status="현재 위치 기준 · 보이는 영역의 방범 CCTV"
-        actions={[{ icon: Layers, label: '레이어' }]}
-      />
-
+    <MainLayout>
       <div
         style={{
           flex: 1,
@@ -561,9 +547,7 @@ export function MapScreen() {
           </div>
         </div>
       </div>
-
-      <BottomNav />
-    </div>
+    </MainLayout>
   )
 }
 

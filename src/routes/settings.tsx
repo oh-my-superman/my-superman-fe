@@ -1,23 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Settings as SettingsIcon } from 'lucide-react'
 
-import { AppBar } from '#/components/app-bar'
-import { BottomNav } from '#/components/bottom-nav'
+import { MainLayout } from '#/components/main-layout'
 
 export const Route = createFileRoute('/settings')({ component: SettingsScreen })
 
 /** Placeholder — full settings screen is out of scope for this handoff. */
 function SettingsScreen() {
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: 'var(--surface)',
-      }}
-    >
-      <AppBar title="설정" />
+    <MainLayout>
       <div
         style={{
           flex: 1,
@@ -37,7 +28,6 @@ function SettingsScreen() {
           설정 화면 준비 중
         </p>
       </div>
-      <BottomNav />
-    </div>
+    </MainLayout>
   )
 }
