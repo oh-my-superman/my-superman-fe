@@ -80,7 +80,15 @@ export async function uploadToS3(
     body: blob,
   })
   if (!put.ok) {
-    throw new Error(`S3 PUT ${put.status}`)
+    const detail = await put.text().catch(() => '')
+    if (import.meta.env.DEV) {
+      console.error('[evidence] S3 PUT failed', {
+        status: put.status,
+        contentType: params.contentType,
+        detail,
+      })
+    }
+    throw new Error(`S3 PUT ${put.status}${detail ? `: ${detail}` : ''}`)
   }
   return s3Uri
 }
