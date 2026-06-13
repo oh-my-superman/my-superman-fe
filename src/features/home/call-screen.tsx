@@ -159,9 +159,8 @@ export function CallScreen() {
             type="button"
             onClick={() => setSafeWordModalOpen(true)}
             style={{
-              padding: '6px 12px',
+              padding: '6px 10px',
               borderRadius: 8,
-              border: '1px solid var(--neutral-200)',
               background: 'var(--neutral-100)',
               display: 'flex',
               alignItems: 'center',
@@ -179,7 +178,7 @@ export function CallScreen() {
             }}
           >
             <Plus size={14} strokeWidth={2.5} />
-            <span style={{ fontSize: 12, fontWeight: 700 }}>세이프 단어 관리</span>
+            <span style={{ fontSize: 10, fontWeight: 700 }}>세이프 워드</span>
           </button>
         </div>
 

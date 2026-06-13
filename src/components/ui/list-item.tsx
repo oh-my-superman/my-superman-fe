@@ -14,6 +14,7 @@ interface ListItemProps {
 /**
  * Row primitive behind the 전화번호부-style home and the map bottom sheet:
  * left slot (avatar/icon) · title + subtitle · right slot (chevron/switch/meta).
+ * Note: Uses <div> instead of <button> even when clickable to allow nested interactive elements.
  */
 export function ListItem({
   leading,
@@ -25,15 +26,31 @@ export function ListItem({
 }: ListItemProps) {
   const pressable = !!onClick
 
-  const body = (
-    <>
-      {leading != null && <span data-sm-part="li-left">{leading}</span>}
-      <span data-sm-part="li-body">
-        <span data-sm-part="li-title">{title}</span>
-        {subtitle != null && <span data-sm-part="li-sub">{subtitle}</span>}
-      </span>
+  return (
+    <div
+      data-sm-slot="list-item"
+      data-pressable={pressable ? 'true' : undefined}
+      onClick={onClick}
+      role={pressable ? 'button' : undefined}
+      tabIndex={pressable ? 0 : undefined}
+    >
+      {leading != null && (
+        <div data-sm-part="li-left">
+          {leading}
+        </div>
+      )}
+      <div data-sm-part="li-body">
+        <div data-sm-part="li-title">
+          {title}
+        </div>
+        {subtitle != null && (
+          <div data-sm-part="li-sub">
+            {subtitle}
+          </div>
+        )}
+      </div>
       {(trailing != null || chevron) && (
-        <span data-sm-part="li-right">
+        <div data-sm-part="li-right">
           {trailing}
           {chevron && (
             <ChevronRight
@@ -42,24 +59,10 @@ export function ListItem({
               style={{ opacity: 0.55 }}
             />
           )}
-        </span>
+        </div>
       )}
-    </>
+    </div>
   )
-
-  if (pressable) {
-    return (
-      <button
-        type="button"
-        data-sm-slot="list-item"
-        data-pressable="true"
-        onClick={onClick}
-      >
-        {body}
-      </button>
-    )
-  }
-  return <div data-sm-slot="list-item">{body}</div>
 }
 
 export function ListDivider({ inset = false }: { inset?: boolean }) {

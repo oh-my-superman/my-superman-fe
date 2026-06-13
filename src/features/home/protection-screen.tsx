@@ -13,12 +13,14 @@ function LevelMeter({
   unit,
   color,
   percent,
+  isContext = false,
 }: {
   label: string
   value: number
   unit: string
   color: string
   percent: number
+  isContext?: boolean
 }) {
   return (
     <div
@@ -34,9 +36,10 @@ function LevelMeter({
       <div
         style={{
           flex: 1,
-          width: 48,
+          width: '100%',
+          maxWidth: 48,
           background: 'var(--neutral-100)',
-          borderRadius: 24,
+          borderRadius: 12,
           position: 'relative',
           overflow: 'hidden',
           display: 'flex',
@@ -45,17 +48,24 @@ function LevelMeter({
         }}
       >
         <motion.div
-          initial={{ height: 0 }}
-          animate={{ height: `${Math.min(100, Math.max(5, percent))}%` }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          initial={isContext ? { height: '2%' } : { height: 0 }}
+          animate={
+            isContext
+              ? { height: ['2%', '4%', '2%'] }
+              : { height: `${Math.min(100, Math.max(5, percent))}%` }
+          }
+          transition={
+            isContext
+              ? { repeat: Infinity, duration: 2.5, ease: 'easeInOut' }
+              : { type: 'spring', stiffness: 300, damping: 30 }
+          }
           style={{
             width: '100%',
             background: color,
-            borderRadius: 24,
+            borderRadius: 12,
             boxShadow: `0 0 20px ${color}40`,
           }}
         />
-        {/* Subtle glass effect on top */}
         <div
           style={{
             position: 'absolute',
@@ -71,22 +81,23 @@ function LevelMeter({
         <div
           style={{
             color: 'var(--neutral-500)',
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: 700,
             marginBottom: 4,
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
+            whiteSpace: 'nowrap',
           }}
         >
           {label}
         </div>
         <div
-          style={{ fontSize: 15, fontWeight: 800, color: 'var(--foreground)' }}
+          style={{ fontSize: 13, fontWeight: 800, color: 'var(--foreground)' }}
         >
           {value}
           <span
             style={{
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: 600,
               marginLeft: 1,
               color: 'var(--neutral-400)',
@@ -111,15 +122,21 @@ export function ProtectionScreen() {
   const sensorData = useSafetySensors(companion)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Map sensor data to percentages for the meters
-  const getLuxPercent = (lx: number) => Math.min(100, (lx / 500) * 100)
-  const getPressurePercent = (hPa: number) => {
-    const base = 980
-    return Math.min(100, Math.max(0, ((hPa - base) / 50) * 100))
+  // Map sensor data to percentages for the meters (Synced with Balanced thresholds)
+  const getLuxPercent = (lx: number) => Math.min(50, Math.max(0, (10 - lx) * 5)) // 0 lx = 50%, 10+ lx = 0%
+  const getPressureRisk = (hPa: number) => {
+    // Baseline: 1013 hPa = 33% (1/3)
+    const baseline = 33
+    const diff = Math.abs(hPa - 1013)
+    const variation = Math.min(67, diff * 15) // Max 67% additional for diff
+    const pulse = (sensorData.pressure % 10) * 0.5 // Minimal pulse for "live" feel
+    
+    return Math.min(100, baseline + variation + pulse)
   }
-  const getMotionPercent = (m: number) => Math.min(100, (m / 40) * 100)
+  const getMotionPercent = (m: number) => Math.min(100, (m / 28) * 100)
   const getRotationPercent = (r: number) => Math.min(100, (r / 500) * 100)
-  const getDbPercent = (db: number) => Math.min(100, (db / 100) * 100)
+  const getDbPercent = (db: number) =>
+    Math.min(100, (Math.max(0, db - 20) / 55) * 100)
 
   const getStatusInfo = () => {
     const score = sensorData.dangerScore
@@ -174,25 +191,69 @@ export function ProtectionScreen() {
       >
         {/* Large Superman Hero Toggle */}
         <div
+          onClick={() => setCompanion(!companion)}
           style={{
             flex: '1.2',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
+            cursor: 'pointer',
             position: 'relative',
           }}
         >
           <div
             style={{
               position: 'relative',
-              width: 220,
-              height: 220,
+              width: 240,
+              height: 240,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
+            {/* Circular Progress Bar (Danger Score) */}
+            <AnimatePresence>
+              {companion && (
+                <svg
+                  style={{
+                    position: 'absolute',
+                    transform: 'rotate(-90deg)',
+                    zIndex: 0,
+                  }}
+                  width="240"
+                  height="240"
+                  viewBox="0 0 240 240"
+                >
+                  {/* Track */}
+                  <circle
+                    cx="120"
+                    cy="120"
+                    r="116"
+                    fill="transparent"
+                    stroke="var(--neutral-100)"
+                    strokeWidth="4"
+                  />
+                  {/* Progress */}
+                  <motion.circle
+                    cx="120"
+                    cy="120"
+                    r="116"
+                    fill="transparent"
+                    stroke="#f08080"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: sensorData.dangerScore / 100 }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    style={{
+                      filter: `drop-shadow(0 0 6px #f0808040)`,
+                    }}
+                  />
+                </svg>
+              )}
+            </AnimatePresence>
+
             {/* Pulse effect when ON */}
             <AnimatePresence>
               {companion && (
@@ -200,11 +261,7 @@ export function ProtectionScreen() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  style={{
-                    position: 'absolute',
-                    inset: -20,
-                    pointerEvents: 'none',
-                  }}
+                  style={{ position: 'absolute', inset: -20 }}
                 >
                   <div
                     className="animate-sm-hero-pulse"
@@ -222,68 +279,55 @@ export function ProtectionScreen() {
             </AnimatePresence>
 
             <div
-              onClick={() => setCompanion(!companion)}
               style={{
-                width: '100%',
-                height: '100%',
+                width: 216,
+                height: 216,
                 borderRadius: '50%',
                 background: '#ffffff',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 position: 'relative',
                 zIndex: 1,
                 boxShadow: companion
                   ? 'var(--shadow-coral)'
                   : 'var(--shadow-sm)',
                 transition: 'all .4s ease',
-                cursor: 'pointer',
               }}
             >
-              <div
+              <video
+                ref={videoRef}
+                src="/video/flying_superman.mp4"
+                muted
+                playsInline
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                  transform: 'translateZ(0)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  width: '120%',
+                  height: '120%',
+                  objectFit: 'cover',
+                  transform: companion
+                    ? 'scale(1) translateY(+10px)'
+                    : 'scale(1)',
+                  transition: 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  mixBlendMode: 'multiply',
                 }}
-              >
-                <video
-                  ref={videoRef}
-                  src="/video/flying_superman.mp4"
-                  muted
-                  playsInline
-                  style={{
-                    width: '120%',
-                    height: '120%',
-                    objectFit: 'cover',
-                    transform: companion
-                      ? 'scale(1) translateY(+10px)'
-                      : 'scale(1)',
-                    transition:
-                      'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    mixBlendMode: 'multiply',
-                  }}
-                  onTimeUpdate={() => {
-                    if (
-                      companion &&
-                      videoRef.current &&
-                      videoRef.current.currentTime >=
-                        videoRef.current.duration - 0.2
-                    ) {
-                      videoRef.current.currentTime = 5.7
-                    }
-                  }}
-                  onEnded={() => {
-                    if (companion && videoRef.current) {
-                      videoRef.current.currentTime = 5.7
-                      videoRef.current.play()
-                    }
-                  }}
-                />
-              </div>
+                onTimeUpdate={() => {
+                  if (
+                    companion &&
+                    videoRef.current &&
+                    videoRef.current.currentTime >=
+                      videoRef.current.duration - 0.2
+                  ) {
+                    videoRef.current.currentTime = 5.7
+                  }
+                }}
+                onEnded={() => {
+                  if (companion && videoRef.current) {
+                    videoRef.current.currentTime = 5.7
+                    videoRef.current.play()
+                  }
+                }}
+              />
             </div>
           </div>
 
@@ -292,49 +336,67 @@ export function ProtectionScreen() {
               {companion ? (
                 <motion.div
                   key="active-status"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
                   style={{
-                    display: 'inline-flex',
+                    display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     gap: 8,
-                    padding: '6px 16px',
-                    borderRadius: 99,
-                    background: status.bg,
-                    color: status.color,
-                    border: `1px solid ${status.color}30`,
-                    marginBottom: 10,
                   }}
                 >
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
+                  <div
                     style={{
-                      width: 8,
-                      height: 8,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 14px',
                       borderRadius: 99,
-                      background: 'currentColor',
+                      background: status.bg,
+                      color: status.color,
+                      border: `1px solid ${status.color}25`,
                     }}
-                  />
-                  <span style={{ fontSize: 15, fontWeight: 800 }}>
-                    {status.label}
-                  </span>
-                  <span style={{ fontSize: 13, opacity: 0.8, fontWeight: 600 }}>
-                    {sensorData.dangerScore}%
-                  </span>
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 99,
+                        background: status.color,
+                      }}
+                    />
+                    <span style={{ fontSize: 14, fontWeight: 800 }}>
+                      {status.label}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: 'var(--neutral-400)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    분석 위험{' '}
+                    <span style={{ color: '#f08080' }}>
+                      {sensorData.dangerScore}%
+                    </span>
+                  </div>
                 </motion.div>
               ) : (
                 <div
                   style={{
                     fontSize: 22,
                     fontWeight: 900,
-                    color: 'var(--foreground)',
+                    color: 'var(--neutral-600)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
                     gap: 8,
-                    marginBottom: 4,
+                    marginBottom: 10,
                   }}
                 >
                   <ShieldAlert size={24} />
@@ -344,17 +406,26 @@ export function ProtectionScreen() {
             </AnimatePresence>
             <p
               style={{
-                fontSize: 14,
-                color: 'var(--neutral-500)',
+                fontSize: 13,
+                color: 'var(--neutral-400)',
                 fontWeight: 500,
                 lineHeight: 1.5,
+                marginTop: 8,
               }}
             >
               {companion ? (
                 <>
-                  종합적인 위험 상황을 <strong>실시간으로 분석</strong>하고 있어요.
+                  종합적인 위험 상황을{' '}
+                  <strong style={{ color: 'var(--neutral-600)' }}>
+                    실시간으로 분석
+                  </strong>
+                  하고 있어요.
                   <br />
-                  위험 상황으로 판단되면 <strong>슈퍼 통화</strong>로 연결돼요.
+                  위험 상황으로 판단되면{' '}
+                  <strong style={{ color: 'var(--neutral-600)' }}>
+                    슈퍼 통화
+                  </strong>
+                  로 연결돼요.
                 </>
               ) : (
                 '탭하여 보호모드를 시작하세요'
@@ -364,7 +435,9 @@ export function ProtectionScreen() {
         </div>
 
         {/* Vertical Level Meters Area */}
-        <div style={{ flex: '1', minHeight: 0, paddingBottom: 10 }}>
+        <div
+          style={{ flex: '1', minHeight: 0, paddingBottom: 10, marginTop: 12 }}
+        >
           <AnimatePresence>
             {companion ? (
               <motion.div
@@ -385,36 +458,44 @@ export function ProtectionScreen() {
                   label="밝기"
                   value={sensorData.lux}
                   unit="lx"
-                  color="#f5a623"
+                  color="#FFE066"
                   percent={getLuxPercent(sensorData.lux)}
                 />
                 <LevelMeter
                   label="기압"
                   value={sensorData.pressure}
                   unit="hPa"
-                  color="#4a8cf0"
-                  percent={getPressurePercent(sensorData.pressure)}
+                  color="#74C0FC"
+                  percent={getPressureRisk(sensorData.pressure)}
                 />
                 <LevelMeter
                   label="충격"
                   value={sensorData.motion}
                   unit="m/s²"
-                  color="#ef4444"
+                  color="#FF8787"
                   percent={getMotionPercent(sensorData.motion)}
                 />
                 <LevelMeter
                   label="회전"
                   value={sensorData.rotation}
                   unit="°/s"
-                  color="#8b5cf6"
+                  color="#9775FA"
                   percent={getRotationPercent(sensorData.rotation)}
                 />
                 <LevelMeter
                   label="소음"
                   value={sensorData.db}
                   unit="dB"
-                  color="#f08080"
+                  color="#FFA8A8"
                   percent={getDbPercent(sensorData.db)}
+                />
+                <LevelMeter
+                  label="맥락"
+                  value={2}
+                  unit="%"
+                  color="#CED4DA"
+                  percent={0}
+                  isContext
                 />
               </motion.div>
             ) : (
@@ -428,16 +509,14 @@ export function ProtectionScreen() {
                   justifyContent: 'center',
                   background: 'var(--neutral-50)',
                   borderRadius: 'var(--radius-3xl)',
-                  border: '1.5px dashed var(--neutral-200)',
                   color: 'var(--neutral-400)',
                   fontSize: 14,
                   fontWeight: 600,
                   textAlign: 'center',
                   padding: 40,
-                  marginTop: 20,
                 }}
               >
-                실시간 분석 데이터가 이곳에 표시돼요.
+                센서 데이터가 이곳에 표시됩니다
               </motion.div>
             )}
           </AnimatePresence>

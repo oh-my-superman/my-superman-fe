@@ -214,7 +214,7 @@ body {
   flex-direction: column;
   background: var(--card);
   color: var(--card-foreground);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   font-family: var(--font-sans);

@@ -2,6 +2,7 @@ export interface Persona {
   id: string
   name: string
   glyph: string
+  icon?: string // Lucide icon name for mono style
   bg: string
   fg: string
   status?: 'online'
@@ -14,6 +15,7 @@ export const PERSONAS: Array<Persona> = [
     id: 'mom',
     name: '엄마',
     glyph: '엄',
+    icon: 'Heart',
     bg: 'var(--coral-100)',
     fg: 'var(--coral-700)',
     status: 'online',
@@ -23,6 +25,7 @@ export const PERSONAS: Array<Persona> = [
     id: 'dad',
     name: '아빠',
     glyph: '아',
+    icon: 'Shield',
     bg: 'var(--neutral-200)',
     fg: 'var(--neutral-700)',
     tagline: '든든하고 엄격하게 주변 상황을 통제하며 안전을 확인합니다',
@@ -30,15 +33,17 @@ export const PERSONAS: Array<Persona> = [
   {
     id: 'boyfriend',
     name: '남자친구',
-    glyph: '💗',
+    glyph: '🙋‍♂️',
+    icon: 'Heart',
     bg: 'var(--coral-50)',
-    fg: 'var(--coral-600)',
+    fg: 'var(--coral-700)',
     tagline: '자연스러운 대화 속에 세이프 단어를 녹여 위기를 모면합니다',
   },
   {
     id: 'police',
     name: '경찰',
-    glyph: '👮',
+    glyph: '🚔',
+    icon: 'ShieldAlert',
     bg: 'var(--blue-info)',
     fg: '#fff',
     tagline: '단호하고 전문적인 지시로 즉각적인 위기 대응을 돕습니다',

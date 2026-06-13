@@ -193,7 +193,7 @@ function HomeScreen({
         </div>
 
         {/* Personas */}
-        <SectionLabel action="편집" onAction={() => {}}>
+        <SectionLabel action="편집" onAction={() => { }}>
           내 슈퍼맨
         </SectionLabel>
         <div
@@ -253,7 +253,7 @@ function HomeScreen({
             title="새 페르소나 만들기"
             subtitle="성격 · 말투 · 호칭을 직접 설정"
             chevron
-            onClick={() => {}}
+            onClick={() => { }}
           />
         </Card>
 
@@ -284,7 +284,7 @@ function HomeScreen({
                 subtitle={s.when}
                 trailing={<Badge variant="accent">{s.persona}</Badge>}
                 chevron
-                onClick={() => {}}
+                onClick={() => { }}
               />
             </React.Fragment>
           ))}
