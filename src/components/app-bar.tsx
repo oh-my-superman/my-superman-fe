@@ -64,32 +64,35 @@ export function AppBar({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '5px 10px',
-                background: 'rgba(0, 0, 0, 0.05)',
+                padding: '5px 12px',
+                background: '#f08080',
+                opacity: 0.7,
                 border: 'none',
                 borderRadius: 99,
               }}
-            >
+              >
               <span
                 style={{
                   width: 6,
                   height: 6,
                   borderRadius: 99,
                   background: statusActive
-                    ? 'var(--success)'
-                    : 'var(--muted-foreground)',
+                    ? '#ffffff'
+                    : 'rgba(255, 255, 255, 0.4)',
                   flex: 'none',
                 }}
               />
               <span
                 style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: statusActive ? 'var(--muted-foreground)' : '#928c86',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  letterSpacing: '-0.01em',
                 }}
               >
                 {status}
               </span>
+              </div>
             </div>
           )}
           {actions.map((a) => {
