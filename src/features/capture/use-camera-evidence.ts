@@ -8,22 +8,34 @@ const JPEG_QUALITY = 0.7
 // Placeholder identity until auth lands (matches session-store).
 const USER_ID = 1
 
+interface CameraEvidenceOptions {
+  facingMode?: ConstrainDOMString
+}
+
 /**
- * While `active`, grabs a JPEG from the (hidden) camera `<video>` every 3s,
+ * While `uploadActive`, grabs a JPEG from the camera `<video>` every 3s,
  * uploads it to S3 via a BE presigned URL, and reports it to the BE as a
  * `screen` evidence frame (`photoUri` + GPS + capturedAt). Audio is not
  * captured. Returns a ref to attach to a muted, playsInline `<video>`.
  *
- * Driven by the call screen with `active = (status === 'live')`, so the camera
- * only runs during an active call and is torn down when it ends.
+ * `cameraActive` controls the local camera stream itself, so video calls can
+ * show a preview before evidence upload begins.
  */
 export function useCameraEvidence(
-  active: boolean,
+  cameraActive: boolean,
+  uploadActive = cameraActive,
+  options: CameraEvidenceOptions = {},
 ): React.RefObject<HTMLVideoElement | null> {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const uploadActiveRef = useRef(uploadActive)
+  const facingMode = options.facingMode ?? 'environment'
 
   useEffect(() => {
-    if (!active || typeof navigator === 'undefined') return
+    uploadActiveRef.current = uploadActive
+  }, [uploadActive])
+
+  useEffect(() => {
+    if (!cameraActive || typeof navigator === 'undefined') return
 
     // Object flag so the async closures see live mutations (a plain `let`
     // would be narrowed to its initial value by the type checker).
@@ -52,6 +64,7 @@ export function useCameraEvidence(
     }
 
     const captureAndUpload = async () => {
+      if (!uploadActiveRef.current) return
       const video = videoRef.current
       if (!video || uploading || video.readyState < 2) return
       const width = video.videoWidth
@@ -95,7 +108,7 @@ export function useCameraEvidence(
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: 'environment',
+            facingMode,
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
@@ -130,7 +143,7 @@ export function useCameraEvidence(
       stream?.getTracks().forEach((track) => track.stop())
       if (videoRef.current) videoRef.current.srcObject = null
     }
-  }, [active])
+  }, [cameraActive, facingMode])
 
   return videoRef
 }

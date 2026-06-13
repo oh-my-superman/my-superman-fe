@@ -5,6 +5,7 @@ export interface Persona {
   bg: string
   fg: string
   status?: 'online'
+  /** 짧은 설명구 (예: "다정한 일상 통화"). */
   tagline: string
 }
 
@@ -16,31 +17,31 @@ export const PERSONAS: Array<Persona> = [
     bg: 'var(--coral-100)',
     fg: 'var(--coral-700)',
     status: 'online',
-    tagline: '다정한 일상 통화 · 가장 자주 사용',
+    tagline: '다정한 일상 통화',
   },
   {
-    id: 'police',
-    name: '경찰 톤',
-    glyph: '👮',
-    bg: 'var(--blue-info)',
-    fg: '#fff',
-    tagline: '강한 억지력 · "순찰차 그쪽으로 보냈어요"',
+    id: 'dad',
+    name: '아빠',
+    glyph: '아',
+    bg: 'var(--neutral-200)',
+    fg: 'var(--neutral-700)',
+    tagline: '든든한 안부 통화',
   },
   {
-    id: 'lover',
-    name: '연인',
+    id: 'boyfriend',
+    name: '남자친구',
     glyph: '💗',
     bg: 'var(--coral-50)',
     fg: 'var(--coral-600)',
-    tagline: '자연스러운 안부 · 심리적 안정',
+    tagline: '자연스러운 안부',
   },
   {
-    id: 'boss',
-    name: '직장 상사',
-    glyph: '👔',
-    bg: 'var(--neutral-200)',
-    fg: 'var(--neutral-700)',
-    tagline: '업무 통화처럼 · 공적 상황 위장',
+    id: 'police',
+    name: '경찰',
+    glyph: '👮',
+    bg: 'var(--blue-info)',
+    fg: '#fff',
+    tagline: '단호한 위기 대응',
   },
 ]
 
@@ -58,5 +59,5 @@ export const SCHEDULED: Array<ScheduledCompanion> = [
     when: '매일 밤 11:00 · 회사 → 집',
     persona: '엄마',
   },
-  { id: 's2', title: '운동 후 귀가', when: '화·목 21:30', persona: '연인' },
+  { id: 's2', title: '운동 후 귀가', when: '화·목 21:30', persona: '남자친구' },
 ]

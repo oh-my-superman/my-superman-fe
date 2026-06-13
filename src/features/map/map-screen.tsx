@@ -339,8 +339,8 @@ function KakaoCanvas({
 }
 
 /**
- * 지도 화면 — mysuperman-service에서 조회한 안심 지킴이 집 + CCTV를 카카오 지도에 표시한다.
- * 지도를 움직이면 보이는 영역(bbox) 기준으로 근처 안전 지점을 다시 조회한다.
+ * 지도 화면 — 안심 지킴이 집 + 방범 CCTV 전처리 데이터를 카카오 지도에 표시한다.
+ * 지도를 움직이면 보이는 영역(bbox) 기준으로 로컬 데이터를 다시 필터링한다.
  */
 export function MapScreen() {
   const [center, setCenter] = useState<LatLng>(SEOLLEUNG_CENTER)
@@ -412,7 +412,7 @@ export function MapScreen() {
       .sort((a, b) => a.distance - b.distance)
   }, [cctvQuery.data, refPoint])
 
-  // 안심지킴이집 (mysuperman-service, server-filtered by bbox).
+  // 안심지킴이집 (geocoded JSON, server-filtered by bbox).
   const safehousesQuery = useQuery({
     queryKey: ['safehouses', roundBbox(bbox)],
     queryFn: () => fetchNearbySafehouses({ data: bbox }),
