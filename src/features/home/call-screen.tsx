@@ -151,26 +151,24 @@ export function CallScreen() {
             type="button"
             onClick={() => setSafeWordModalOpen(true)}
             style={{
-              padding: '6px 10px',
+              padding: '6px 12px',
               borderRadius: 8,
-              border: '1px solid var(--coral-100)',
-              background: 'var(--coral-50)',
+              border: '1px solid var(--neutral-200)',
+              background: 'var(--neutral-100)',
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
-              color: 'var(--coral-600)',
+              color: 'var(--neutral-600)',
               cursor: 'pointer',
-              transition: 'background 0.2s ease',
+              transition: 'all 0.2s ease',
               marginBottom: 6, // Align with the label bottom
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = 'var(--coral-100)'
+              e.currentTarget.style.background = 'var(--neutral-200)'
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.background = 'var(--coral-50)'
+              e.currentTarget.style.background = 'var(--neutral-100)'
             }}
           >
-            <Shield size={14} strokeWidth={2.5} />
             <span style={{ fontSize: 12, fontWeight: 700 }}>세이프 단어 관리</span>
           </button>
         </div>
@@ -283,15 +281,15 @@ export function CallScreen() {
                 width: '100%',
                 padding: '16px',
                 borderRadius: 12,
-                border: '1.5px solid var(--neutral-200)',
+                border: 'none',
                 background: 'var(--neutral-50)',
                 fontSize: 16,
                 outline: 'none',
               }}
             />
-          </div>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label
               style={{
                 fontSize: 13,
@@ -319,8 +317,8 @@ export function CallScreen() {
                   style={{
                     padding: '14px',
                     borderRadius: 12,
-                    border: '1.5px solid var(--neutral-200)',
-                    background: '#fff',
+                    border: 'none',
+                    background: 'var(--neutral-50)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
@@ -330,14 +328,18 @@ export function CallScreen() {
                     color: 'var(--neutral-700)',
                   }}
                 >
-                  <style.icon size={18} color="var(--neutral-400)" strokeWidth={2.2} />
+                  <style.icon
+                    size={18}
+                    color="var(--neutral-400)"
+                    strokeWidth={2.2}
+                  />
                   {style.label}
                 </button>
               ))}
             </div>
-          </div>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label
               style={{
                 fontSize: 13,
@@ -354,13 +356,13 @@ export function CallScreen() {
                 width: '100%',
                 padding: '16px',
                 borderRadius: 12,
-                border: '1.5px solid var(--neutral-200)',
+                border: 'none',
                 background: 'var(--neutral-50)',
                 fontSize: 16,
                 outline: 'none',
               }}
             />
-          </div>
+            </div>
 
           <button
             onClick={() => {
@@ -418,7 +420,7 @@ export function CallScreen() {
                   flex: 1,
                   padding: '14px 16px',
                   borderRadius: 12,
-                  border: '1.5px solid var(--neutral-200)',
+                  border: 'none',
                   background: 'var(--neutral-50)',
                   fontSize: 15,
                   outline: 'none',
@@ -462,7 +464,7 @@ export function CallScreen() {
                     borderRadius: 99,
                     fontSize: 14,
                     fontWeight: 700,
-                    border: '1px solid var(--coral-100)',
+                    border: 'none',
                   }}
                 >
                   {word}
