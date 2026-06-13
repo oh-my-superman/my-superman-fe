@@ -72,12 +72,14 @@ function PinMarker({
   icon: PinIcon,
   size = 34,
   active = false,
+  hovered = false,
   onClick,
 }: {
   color: string
   icon: LucideIcon
   size?: number
   active?: boolean
+  hovered?: boolean
   onClick?: () => void
 }) {
   return (
@@ -99,12 +101,13 @@ function PinMarker({
           height: active ? size + 4 : size,
           background: color,
           borderRadius: '50% 50% 50% 0',
-          transform: 'rotate(-45deg)',
+          transform: hovered ? 'rotate(-45deg) scale(1.25)' : 'rotate(-45deg)',
+          transformOrigin: 'center',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           border: active ? '3px solid #fff' : '2.5px solid #fff',
-          transition: 'width .12s ease, height .12s ease',
+          transition: 'width .12s ease, height .12s ease, transform .12s ease',
         }}
       >
         <div
@@ -234,6 +237,7 @@ function KakaoCanvas({
   center,
   userPos,
   selectedId,
+  hoveredId,
   cctv,
   safehouses,
   onBboxChange,
@@ -242,6 +246,7 @@ function KakaoCanvas({
   center: LatLng
   userPos: LatLng | null
   selectedId: string | null
+  hoveredId: string | null
   cctv: Array<CctvNear>
   safehouses: Array<SafeHouseNear>
   onBboxChange: (bbox: Bbox) => void
@@ -298,14 +303,15 @@ function KakaoCanvas({
           key={s.id}
           position={{ lat: s.lat, lng: s.lng }}
           yAnchor={1}
-          zIndex={selectedId === s.id ? 30 : 20}
+          zIndex={selectedId === s.id ? 30 : hoveredId === s.id ? 25 : 20}
           clickable
         >
           <PinMarker
             color={SAFE_COLOR}
             icon={Home}
-            size={38}
+            size={32}
             active={selectedId === s.id}
+            hovered={hoveredId === s.id}
             onClick={() => onSelect(s.id, { lat: s.lat, lng: s.lng })}
           />
         </CustomOverlayMap>
@@ -316,14 +322,15 @@ function KakaoCanvas({
           key={c.id}
           position={{ lat: c.lat, lng: c.lng }}
           yAnchor={1}
-          zIndex={selectedId === c.id ? 30 : 5}
+          zIndex={selectedId === c.id ? 30 : hoveredId === c.id ? 25 : 5}
           clickable
         >
           <PinMarker
             color={CCTV_COLOR}
             icon={Cctv}
-            size={30}
+            size={26}
             active={selectedId === c.id}
+            hovered={hoveredId === c.id}
             onClick={() => onSelect(c.id, { lat: c.lat, lng: c.lng })}
           />
         </CustomOverlayMap>
@@ -346,6 +353,7 @@ export function MapScreen() {
   const [center, setCenter] = useState<LatLng>(SEOLLEUNG_CENTER)
   const [userPos, setUserPos] = useState<UserLocation | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [bbox, setBbox] = useState<Bbox>(() => bboxAround(SEOLLEUNG_CENTER))
   const sessionStatus = useCompanionSession((s) => s.status)
   const sessionId = useCompanionSession((s) => s.sessionId)
@@ -465,6 +473,7 @@ export function MapScreen() {
             center={center}
             userPos={userPos}
             selectedId={selectedId}
+            hoveredId={hoveredId}
             cctv={cctvNear}
             safehouses={safehousesNear}
             onBboxChange={setBbox}
@@ -565,7 +574,13 @@ export function MapScreen() {
             }}
           >
             {sheetItems.map((item, i) => (
-              <div key={`${item.kind}-${item.id}`}>
+              <div
+                key={`${item.kind}-${item.id}`}
+                onMouseEnter={() => setHoveredId(item.id)}
+                onMouseLeave={() =>
+                  setHoveredId((cur) => (cur === item.id ? null : cur))
+                }
+              >
                 {i > 0 && <ListDivider />}
                 <ListItem
                   leading={<SpotIcon safe={item.kind === 'safe'} />}
