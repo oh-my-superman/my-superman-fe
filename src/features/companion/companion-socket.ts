@@ -273,8 +273,10 @@ export class CompanionSocket {
   #scheduleReconnect(): void {
     if (!this.#wantOpen) return
     if (this.#reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      // Stop hammering, but keep `wantOpen` so a foreground/`online` resume can
+      // try again — e.g. when the BE comes up after the FE. (Explicit close()
+      // clears `wantOpen`, so this never fights a real shutdown.)
       this.#rejectReady(new Error('companion: reconnect attempts exhausted'))
-      this.#wantOpen = false
       this.#setStatus('error')
       return
     }
