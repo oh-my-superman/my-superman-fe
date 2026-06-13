@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import { useCompanionSession } from '../companion/session-store'
 import { uploadToS3 } from './s3-upload'
@@ -16,7 +16,11 @@ interface CameraEvidenceOptions {
  * While `uploadActive`, grabs a JPEG from the camera `<video>` every 3s,
  * uploads it to S3 via a BE presigned URL, and reports it to the BE as a
  * `screen` evidence frame (`photoUri` + GPS + capturedAt). Audio is not
- * captured. Returns a ref to attach to a muted, playsInline `<video>`.
+ * captured. Returns a callback ref to attach to a muted, playsInline `<video>`.
+ *
+ * The ref is a callback (not an object ref) so the stream re-binds whenever the
+ * `<video>` element changes — e.g. the call screen swaps elements between its
+ * connecting (full-screen) and live (PiP) layouts.
  *
  * `cameraActive` controls the local camera stream itself, so video calls can
  * show a preview before evidence upload begins.
@@ -25,10 +29,23 @@ export function useCameraEvidence(
   cameraActive: boolean,
   uploadActive = cameraActive,
   options: CameraEvidenceOptions = {},
-): React.RefObject<HTMLVideoElement | null> {
-  const videoRef = useRef<HTMLVideoElement>(null)
+): (el: HTMLVideoElement | null) => void {
+  const elRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const uploadActiveRef = useRef(uploadActive)
   const facingMode = options.facingMode ?? 'environment'
+
+  // Bind the live stream to whichever <video> element is currently mounted, so
+  // it survives the call screen swapping elements (connecting → live PiP).
+  const attachRef = useCallback((el: HTMLVideoElement | null) => {
+    elRef.current = el
+    if (el && streamRef.current) {
+      el.srcObject = streamRef.current
+      void el.play().catch(() => {
+        // autoplay may be blocked until a gesture
+      })
+    }
+  }, [])
 
   useEffect(() => {
     uploadActiveRef.current = uploadActive
@@ -41,7 +58,6 @@ export function useCameraEvidence(
     // would be narrowed to its initial value by the type checker).
     const control = { cancelled: false }
     const isCancelled = () => control.cancelled
-    let stream: MediaStream | null = null
     let interval: ReturnType<typeof setInterval> | null = null
     let geoWatch: number | null = null
     let coords: { latitude: number; longitude: number } | null = null
@@ -65,7 +81,7 @@ export function useCameraEvidence(
 
     const captureAndUpload = async () => {
       if (!uploadActiveRef.current) return
-      const video = videoRef.current
+      const video = elRef.current
       if (!video || uploading || video.readyState < 2) return
       const width = video.videoWidth
       const height = video.videoHeight
@@ -105,6 +121,7 @@ export function useCameraEvidence(
     }
 
     const setup = async () => {
+      let stream: MediaStream
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
@@ -122,13 +139,15 @@ export function useCameraEvidence(
         stream.getTracks().forEach((track) => track.stop())
         return
       }
-      const video = videoRef.current
-      if (!video) return
-      video.srcObject = stream
-      try {
-        await video.play()
-      } catch {
-        // autoplay may be blocked until a gesture; capture resumes once playing
+      streamRef.current = stream
+      const video = elRef.current
+      if (video) {
+        video.srcObject = stream
+        try {
+          await video.play()
+        } catch {
+          // autoplay may be blocked until a gesture; capture resumes once playing
+        }
       }
       interval = setInterval(() => void captureAndUpload(), CAPTURE_INTERVAL_MS)
     }
@@ -140,10 +159,11 @@ export function useCameraEvidence(
       if (geoWatch !== null) {
         navigator.geolocation.clearWatch(geoWatch)
       }
-      stream?.getTracks().forEach((track) => track.stop())
-      if (videoRef.current) videoRef.current.srcObject = null
+      streamRef.current?.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
+      if (elRef.current) elRef.current.srcObject = null
     }
   }, [cameraActive, facingMode])
 
-  return videoRef
+  return attachRef
 }

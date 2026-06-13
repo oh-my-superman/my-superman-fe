@@ -2,14 +2,18 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import {
+  Hand,
   Mic,
   MicOff,
   PhoneOff,
   PictureInPicture2,
+  ScreenShare,
   Settings,
   ShieldAlert,
+  Smile,
   Sparkles,
   SwitchCamera,
+  User,
   Video,
   Volume2,
 } from 'lucide-react'
@@ -256,7 +260,307 @@ function CallScreen() {
     cursor: 'pointer',
   }
 
-  // ── Video call: full-screen front camera + overlaid name/status (reference). ──
+  const [elapsed, setElapsed] = useState(0)
+  useEffect(() => {
+    if (status !== 'live') {
+      setElapsed(0)
+      return
+    }
+    const t = setInterval(() => setElapsed((e) => e + 1), 1000)
+    return () => clearInterval(t)
+  }, [status])
+  const elapsedLabel = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`
+
+  // Shared 5-button control bar for the video-call layouts.
+  const videoControls = (
+    <div
+      style={{
+        flex: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        padding: '18px 18px 26px',
+      }}
+    >
+      <button type="button" aria-label="효과" style={videoCtrlStyle}>
+        <Sparkles size={22} />
+      </button>
+      <button
+        type="button"
+        aria-label={muted ? '음소거 해제' : '음소거'}
+        aria-pressed={muted}
+        onClick={toggleMute}
+        style={{
+          ...videoCtrlStyle,
+          background: muted ? '#fff' : 'rgba(255,255,255,0.14)',
+          color: muted ? 'var(--neutral-900)' : '#fff',
+        }}
+      >
+        {muted ? <MicOff size={22} /> : <Mic size={22} />}
+      </button>
+      <button
+        type="button"
+        aria-label="종료"
+        onClick={endCall}
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: 99,
+          border: 'none',
+          background: 'var(--coral-500)',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: 'var(--shadow-coral)',
+        }}
+      >
+        <PhoneOff size={26} />
+      </button>
+      <button type="button" aria-label="카메라 전환" style={videoCtrlStyle}>
+        <SwitchCamera size={22} />
+      </button>
+      <button type="button" aria-label="영상" style={videoCtrlStyle}>
+        <Video size={22} />
+      </button>
+    </div>
+  )
+
+  // ── Live video call: remote (AI persona) main + self-camera PiP (reference). ──
+  if (isVideoCall && status === 'live') {
+    const chips: Array<{
+      icon: 'rec' | 'share' | 'react' | 'hand'
+      label: string
+    }> = [
+      { icon: 'rec', label: '통화 녹음 시작' },
+      { icon: 'share', label: '화면 공유' },
+      { icon: 'react', label: '빠른 공감' },
+      { icon: 'hand', label: '손들기' },
+    ]
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          background: 'var(--neutral-900)',
+          color: '#fff',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header: name + count + timer (left), icons (right) */}
+        <div
+          style={{
+            flex: 'none',
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            padding: '14px 18px 6px',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700 }}>
+                {persona.name}
+              </span>
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '2px 8px',
+                  borderRadius: 99,
+                  background: 'rgba(255,255,255,0.14)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                <User size={13} />2
+              </span>
+            </div>
+            <div
+              style={{ fontSize: 'var(--text-sm)', opacity: 0.8, marginTop: 2 }}
+            >
+              {elapsedLabel}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 18, opacity: 0.92 }}>
+            <Settings size={22} />
+            <Volume2 size={22} />
+            <PictureInPicture2 size={22} />
+          </div>
+        </div>
+
+        {/* Action chips (horizontal scroll) */}
+        <div
+          style={{
+            flex: 'none',
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            padding: '4px 14px 10px',
+          }}
+        >
+          {chips.map((c) => (
+            <span
+              key={c.label}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 12px',
+                borderRadius: 99,
+                border: '1px solid rgba(255,255,255,0.18)',
+                background: 'rgba(255,255,255,0.06)',
+                fontSize: 13,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                flex: 'none',
+              }}
+            >
+              {c.icon === 'rec' && (
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: 99,
+                    border: '2px solid #fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: 99,
+                      background: 'var(--coral-500)',
+                    }}
+                  />
+                </span>
+              )}
+              {c.icon === 'share' && <ScreenShare size={16} />}
+              {c.icon === 'react' && <Smile size={16} />}
+              {c.icon === 'hand' && <Hand size={16} />}
+              {c.label}
+            </span>
+          ))}
+        </div>
+
+        {/* Main video (AI persona) + self PiP */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            margin: '0 12px',
+            borderRadius: 'var(--radius-2xl)',
+            overflow: 'hidden',
+            position: 'relative',
+            background: '#000',
+          }}
+        >
+          <img
+            src="/image/listening.png"
+            alt=""
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: speaking ? 0 : 1,
+              transition: 'opacity .15s ease',
+            }}
+          />
+          <img
+            src="/image/talking.png"
+            alt=""
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              opacity: speaking ? 1 : 0,
+              transition: 'opacity .15s ease',
+            }}
+          />
+
+          {/* Remote label */}
+          <span
+            style={{
+              position: 'absolute',
+              right: 14,
+              bottom: 14,
+              fontSize: 'var(--text-sm)',
+              fontWeight: 600,
+              textShadow: '0 1px 4px rgba(0,0,0,.5)',
+            }}
+          >
+            {persona.name}
+          </span>
+
+          {/* Self camera PiP */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 14,
+              bottom: 14,
+              width: '30%',
+              minWidth: 96,
+              aspectRatio: '3 / 4',
+              borderRadius: 16,
+              overflow: 'hidden',
+              background: 'var(--neutral-800)',
+              boxShadow: 'var(--shadow-lg)',
+            }}
+          >
+            <video
+              ref={evidenceVideoRef}
+              muted
+              playsInline
+              autoPlay
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                transform: 'scaleX(-1)',
+                display: 'block',
+              }}
+            />
+            <span
+              style={{
+                position: 'absolute',
+                left: 8,
+                bottom: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                textShadow: '0 1px 4px rgba(0,0,0,.6)',
+              }}
+            >
+              나
+            </span>
+          </div>
+        </div>
+
+        {videoControls}
+
+        {danger && (
+          <DangerModal
+            danger={danger}
+            report={report}
+            onConfirm={confirmReport}
+            onCancel={cancelReport}
+            onClose={dismissDanger}
+          />
+        )}
+      </div>
+    )
+  }
+
+  // ── Video call (connecting): full-screen front camera + name/status (reference). ──
   if (isVideoCall) {
     return (
       <div
@@ -393,59 +697,7 @@ function CallScreen() {
           </div>
         </div>
 
-        {/* Control bar */}
-        <div
-          style={{
-            flex: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-around',
-            padding: '18px 18px 26px',
-          }}
-        >
-          <button type="button" aria-label="효과" style={videoCtrlStyle}>
-            <Sparkles size={22} />
-          </button>
-          <button
-            type="button"
-            aria-label={muted ? '음소거 해제' : '음소거'}
-            aria-pressed={muted}
-            onClick={toggleMute}
-            style={{
-              ...videoCtrlStyle,
-              background: muted ? '#fff' : 'rgba(255,255,255,0.14)',
-              color: muted ? 'var(--neutral-900)' : '#fff',
-            }}
-          >
-            {muted ? <MicOff size={22} /> : <Mic size={22} />}
-          </button>
-          <button
-            type="button"
-            aria-label="종료"
-            onClick={endCall}
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 99,
-              border: 'none',
-              background: 'var(--coral-500)',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              boxShadow: 'var(--shadow-coral)',
-            }}
-          >
-            <PhoneOff size={26} />
-          </button>
-          <button type="button" aria-label="카메라 전환" style={videoCtrlStyle}>
-            <SwitchCamera size={22} />
-          </button>
-          <button type="button" aria-label="영상" style={videoCtrlStyle}>
-            <Video size={22} />
-          </button>
-        </div>
+        {videoControls}
 
         {danger && (
           <DangerModal
