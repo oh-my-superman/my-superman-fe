@@ -233,7 +233,7 @@ export function HomeScreen() {
                 justifyContent: 'center',
                 position: 'relative',
                 zIndex: 1,
-                border: companion ? 'none' : '1.5px solid var(--neutral-200)',
+                border: 'none',
                 boxShadow: companion ? 'var(--shadow-coral)' : 'none',
                 transition: 'all .4s ease',
               }}
