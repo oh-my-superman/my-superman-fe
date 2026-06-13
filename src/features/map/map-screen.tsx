@@ -1,6 +1,8 @@
 import { ClientOnly } from '@tanstack/react-router'
-import { useCallback, useEffect, useState } from 'react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CustomOverlayMap, Map } from 'react-kakao-maps-sdk'
+import { debounce } from 'es-toolkit'
 import { Camera, Crosshair, Home, Layers } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -8,16 +10,51 @@ import { Badge } from '#/components/ui/badge'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { AppBar } from '#/components/app-bar'
 import { BottomNav } from '#/components/bottom-nav'
-import { SEOLLEUNG_CENTER, SPOTS } from '#/features/map/spots'
+import { SAFE_HOUSES, SEOLLEUNG_CENTER } from '#/features/map/spots'
+import { fetchNearbyCctv } from '#/features/map/cctv'
+import type { Bbox } from '#/features/map/cctv'
 import { useKakaoMapLoader } from '#/features/map/use-kakao-map'
-import type { Spot } from '#/features/map/spots'
 
 const CCTV_COLOR = 'var(--blue-info)'
 const SAFE_COLOR = 'var(--coral-500)'
 
+// How many CCTV to draw / list (nearest first) so dense areas stay readable.
+const MAX_CCTV_MARKERS = 60
+const MAX_CCTV_LIST = 30
+
 interface LatLng {
   lat: number
   lng: number
+}
+
+function bboxAround({ lat, lng }: LatLng): Bbox {
+  return {
+    minX: lng - 0.012,
+    maxX: lng + 0.012,
+    minY: lat - 0.009,
+    maxY: lat + 0.009,
+  }
+}
+
+/** Round a bbox so small map nudges reuse the same query cache entry. */
+function roundBbox(b: Bbox) {
+  const r = (n: number) => Math.round(n * 1000) / 1000
+  return { minX: r(b.minX), maxX: r(b.maxX), minY: r(b.minY), maxY: r(b.maxY) }
+}
+
+function haversineM(a: LatLng, b: LatLng): number {
+  const R = 6371000
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const dLat = toRad(b.lat - a.lat)
+  const dLng = toRad(b.lng - a.lng)
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(x))
+}
+
+function distLabel(m: number): string {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`
 }
 
 /** Teardrop pin (reused as Kakao CustomOverlayMap content). */
@@ -111,7 +148,7 @@ function Chip({
 }: {
   color: string
   label: string
-  count: number
+  count: number | string
 }) {
   return (
     <div
@@ -148,6 +185,15 @@ function Chip({
   )
 }
 
+interface CctvNear {
+  id: string
+  lat: number
+  lng: number
+  purpose: string
+  address: string
+  distance: number
+}
+
 /** Centered notice shown over the map canvas (missing key / load error). */
 function MapNotice({ children }: { children: React.ReactNode }) {
   return (
@@ -170,20 +216,42 @@ function MapNotice({ children }: { children: React.ReactNode }) {
   )
 }
 
-/** The Kakao map canvas with spot pins + the user-location dot. Client-only. */
+/** The Kakao map canvas with safe-house + CCTV pins and the user-location dot. */
 function KakaoCanvas({
   center,
   userPos,
   selectedId,
-  onSelectSpot,
+  cctv,
+  onBboxChange,
+  onSelect,
 }: {
   center: LatLng
   userPos: LatLng | null
   selectedId: string | null
-  onSelectSpot: (spot: Spot) => void
+  cctv: Array<CctvNear>
+  onBboxChange: (bbox: Bbox) => void
+  onSelect: (id: string, pos: LatLng) => void
 }) {
-  const { loading, error, configured } = useKakaoMapLoader()
+  // Debounced bbox sync from the live map viewport (drag / zoom).
+  const syncBbox = useMemo(
+    () =>
+      debounce((map: kakao.maps.Map) => {
+        const b = map.getBounds()
+        const sw = b.getSouthWest()
+        const ne = b.getNorthEast()
+        onBboxChange({
+          minX: sw.getLng(),
+          maxX: ne.getLng(),
+          minY: sw.getLat(),
+          maxY: ne.getLat(),
+        })
+      }, 350),
+    [onBboxChange],
+  )
+  useEffect(() => () => syncBbox.cancel(), [syncBbox])
 
+  // Load the Kakao Maps SDK before rendering <Map> (it needs the global `kakao`).
+  const { loading, error, configured } = useKakaoMapLoader()
   if (!configured) {
     return (
       <MapNotice>
@@ -207,27 +275,44 @@ function KakaoCanvas({
       isPanto
       level={4}
       style={{ width: '100%', height: '100%' }}
+      onCreate={syncBbox}
+      onBoundsChanged={syncBbox}
     >
-      {SPOTS.map((s) => {
-        const safe = s.type === 'safe'
-        return (
-          <CustomOverlayMap
-            key={s.id}
-            position={{ lat: s.lat, lng: s.lng }}
-            yAnchor={1}
-            zIndex={selectedId === s.id ? 20 : 5}
-            clickable
-          >
-            <PinMarker
-              color={safe ? SAFE_COLOR : CCTV_COLOR}
-              icon={safe ? Home : Camera}
-              size={safe ? 38 : 32}
-              active={selectedId === s.id}
-              onClick={() => onSelectSpot(s)}
-            />
-          </CustomOverlayMap>
-        )
-      })}
+      {SAFE_HOUSES.map((s) => (
+        <CustomOverlayMap
+          key={s.id}
+          position={{ lat: s.lat, lng: s.lng }}
+          yAnchor={1}
+          zIndex={selectedId === s.id ? 30 : 20}
+          clickable
+        >
+          <PinMarker
+            color={SAFE_COLOR}
+            icon={Home}
+            size={38}
+            active={selectedId === s.id}
+            onClick={() => onSelect(s.id, { lat: s.lat, lng: s.lng })}
+          />
+        </CustomOverlayMap>
+      ))}
+
+      {cctv.slice(0, MAX_CCTV_MARKERS).map((c) => (
+        <CustomOverlayMap
+          key={c.id}
+          position={{ lat: c.lat, lng: c.lng }}
+          yAnchor={1}
+          zIndex={selectedId === c.id ? 30 : 5}
+          clickable
+        >
+          <PinMarker
+            color={CCTV_COLOR}
+            icon={Camera}
+            size={30}
+            active={selectedId === c.id}
+            onClick={() => onSelect(c.id, { lat: c.lat, lng: c.lng })}
+          />
+        </CustomOverlayMap>
+      ))}
 
       {userPos && (
         <CustomOverlayMap position={userPos} yAnchor={0.5} zIndex={6}>
@@ -239,13 +324,14 @@ function KakaoCanvas({
 }
 
 /**
- * 지도 화면 — nearby CCTV + 안심 지킴이 집 on a real Kakao map, with filter chips,
- * automatic current-location, and a bottom sheet listing safe spots by distance.
+ * 지도 화면 — 안심 지킴이 집(목업) + 방범 CCTV(행안부 전국 CCTV 표준데이터 전처리)를
+ * 카카오 지도에 표시. 지도를 움직이면 보이는 영역(bbox) 기준으로 근처 CCTV를 다시 조회한다.
  */
 export function MapScreen() {
   const [center, setCenter] = useState<LatLng>(SEOLLEUNG_CENTER)
   const [userPos, setUserPos] = useState<LatLng | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [bbox, setBbox] = useState<Bbox>(() => bboxAround(SEOLLEUNG_CENTER))
 
   const locate = useCallback(() => {
     // Runs only from useEffect / onClick (client), so navigator is available.
@@ -254,6 +340,7 @@ export function MapScreen() {
         const next = { lat: pos.coords.latitude, lng: pos.coords.longitude }
         setUserPos(next)
         setCenter(next)
+        setBbox(bboxAround(next))
       },
       () => {
         // denied / unavailable → keep the 역삼역 fallback center
@@ -267,13 +354,31 @@ export function MapScreen() {
     locate()
   }, [locate])
 
-  const selectSpot = useCallback((spot: Spot) => {
-    setSelectedId(spot.id)
-    setCenter({ lat: spot.lat, lng: spot.lng })
-  }, [])
+  const cctvQuery = useQuery({
+    queryKey: ['cctv', roundBbox(bbox)],
+    queryFn: () => fetchNearbyCctv({ data: bbox }),
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
+  })
 
-  const cctvCount = SPOTS.filter((s) => s.type === 'cctv').length
-  const safeCount = SPOTS.filter((s) => s.type === 'safe').length
+  const total = cctvQuery.data?.total ?? 0
+  const refPoint = userPos ?? center
+
+  // Sort returned CCTV by distance from the reference point.
+  const cctvNear: Array<CctvNear> = useMemo(() => {
+    const items = cctvQuery.data?.items ?? []
+    return items
+      .map((c) => ({
+        ...c,
+        distance: haversineM(refPoint, { lat: c.lat, lng: c.lng }),
+      }))
+      .sort((a, b) => a.distance - b.distance)
+  }, [cctvQuery.data, refPoint])
+
+  const selectSpot = useCallback((id: string, pos: LatLng) => {
+    setSelectedId(id)
+    setCenter(pos)
+  }, [])
 
   return (
     <div
@@ -286,7 +391,7 @@ export function MapScreen() {
     >
       <AppBar
         title="안전 지도"
-        status="현재 위치 기준 · 반경 500m"
+        status="현재 위치 기준 · 보이는 영역의 방범 CCTV"
         actions={[{ icon: Layers, label: '레이어' }]}
       />
 
@@ -299,13 +404,14 @@ export function MapScreen() {
           background: '#e7eae4',
         }}
       >
-        {/* Map canvas — browser-only (Kakao SDK touches window). */}
         <ClientOnly fallback={null}>
           <KakaoCanvas
             center={center}
             userPos={userPos}
             selectedId={selectedId}
-            onSelectSpot={selectSpot}
+            cctv={cctvNear}
+            onBboxChange={setBbox}
+            onSelect={selectSpot}
           />
         </ClientOnly>
 
@@ -321,8 +427,16 @@ export function MapScreen() {
             zIndex: 8,
           }}
         >
-          <Chip color={CCTV_COLOR} label="CCTV" count={cctvCount} />
-          <Chip color={SAFE_COLOR} label="안심 지킴이 집" count={safeCount} />
+          <Chip
+            color={CCTV_COLOR}
+            label="CCTV"
+            count={cctvQuery.isLoading ? '…' : total}
+          />
+          <Chip
+            color={SAFE_COLOR}
+            label="안심 지킴이 집"
+            count={SAFE_HOUSES.length}
+          />
         </div>
 
         {/* current-location FAB */}
@@ -394,56 +508,84 @@ export function MapScreen() {
             </Badge>
           </div>
           <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-            {SPOTS.map((s, i) => {
-              const safe = s.type === 'safe'
-              return (
-                <div key={s.id}>
-                  {i > 0 && <ListDivider />}
-                  <ListItem
-                    leading={
-                      <span
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 11,
-                          background: safe
-                            ? 'var(--coral-50)'
-                            : 'color-mix(in srgb, var(--blue-info) 12%, #fff)',
-                          color: safe ? 'var(--coral-600)' : 'var(--blue-info)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flex: 'none',
-                        }}
-                      >
-                        {safe ? <Home size={19} /> : <Camera size={19} />}
-                      </span>
-                    }
-                    title={s.title}
-                    subtitle={
-                      <span>
-                        {s.dist} · {s.meta}
-                        {safe && s.open ? (
-                          <span
-                            style={{ color: 'var(--success)', fontWeight: 600 }}
-                          >
-                            {' '}
-                            · 영업 중
-                          </span>
-                        ) : null}
-                      </span>
-                    }
-                    chevron
-                    onClick={() => selectSpot(s)}
-                  />
-                </div>
-              )
-            })}
+            {SAFE_HOUSES.map((s, i) => (
+              <div key={s.id}>
+                {i > 0 && <ListDivider />}
+                <ListItem
+                  leading={<SpotIcon safe />}
+                  title={s.title}
+                  subtitle={
+                    <span>
+                      {s.dist} · {s.meta}
+                      {s.open ? (
+                        <span
+                          style={{ color: 'var(--success)', fontWeight: 600 }}
+                        >
+                          {' '}
+                          · 영업 중
+                        </span>
+                      ) : null}
+                    </span>
+                  }
+                  chevron
+                  onClick={() => selectSpot(s.id, { lat: s.lat, lng: s.lng })}
+                />
+              </div>
+            ))}
+
+            {cctvNear.slice(0, MAX_CCTV_LIST).map((c) => (
+              <div key={c.id}>
+                <ListDivider />
+                <ListItem
+                  leading={<SpotIcon />}
+                  title={c.address || `방범 CCTV (${c.purpose})`}
+                  subtitle={`${c.purpose} CCTV · ${distLabel(c.distance)}`}
+                  chevron
+                  onClick={() => selectSpot(c.id, { lat: c.lat, lng: c.lng })}
+                />
+              </div>
+            ))}
+
+            {!cctvQuery.isLoading && total === 0 && (
+              <p
+                style={{
+                  margin: '12px 4px',
+                  fontSize: 'var(--text-sm)',
+                  color: 'var(--muted-foreground)',
+                }}
+              >
+                이 영역에는 등록된 방범 CCTV가 없어요. 지도를 옮겨 보세요.
+                (데이터: 서울 지역)
+              </p>
+            )}
           </div>
         </div>
       </div>
 
       <BottomNav />
     </div>
+  )
+}
+
+/** Rounded icon chip used at the left of each bottom-sheet row. */
+function SpotIcon({ safe = false }: { safe?: boolean }) {
+  return (
+    <span
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 11,
+        background: safe
+          ? 'var(--coral-50)'
+          : 'color-mix(in srgb, var(--blue-info) 12%, #fff)',
+        color: safe ? 'var(--coral-600)' : 'var(--blue-info)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 'none',
+      }}
+    >
+      {safe ? <Home size={19} /> : <Camera size={19} />}
+    </span>
   )
 }

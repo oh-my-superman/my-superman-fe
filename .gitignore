@@ -12,3 +12,6 @@ dist-ssr
 .vercel
 __unconfig*
 todos.json
+
+# Raw CCTV CSVs (manual download) — only the filtered cctv-data.json is committed
+cctv_*.csv
