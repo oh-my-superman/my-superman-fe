@@ -77,7 +77,7 @@ export function AppBar({
                   height: 6,
                   borderRadius: 99,
                   background: statusActive
-                    ? '#ffffff'
+                    ? 'var(--success)'
                     : 'var(--muted-foreground)',
                   flex: 'none',
                 }}
