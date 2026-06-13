@@ -1,5 +1,5 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router'
-import { Map, Phone, Settings } from 'lucide-react'
+import { Map, Phone, Shield } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 interface Tab {
@@ -9,12 +9,12 @@ interface Tab {
 }
 
 const TABS: Array<Tab> = [
-  { to: '/', icon: Phone, label: '메인' },
+  { to: '/', icon: Phone, label: '통화' },
+  { to: '/protection', icon: Shield, label: '보호' },
   { to: '/map', icon: Map, label: '지도' },
-  { to: '/settings', icon: Settings, label: '설정' },
 ]
 
-/** Shared tab bar: 메인 · 지도 · 설정. Active tab derived from the route. */
+/** Shared tab bar: 통화 · 보호 · 지도. Active tab derived from the route. */
 export function BottomNav() {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })

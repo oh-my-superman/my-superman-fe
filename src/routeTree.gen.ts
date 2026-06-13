@@ -9,14 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProtectionRouteImport } from './routes/protection'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CallPersonaIdRouteImport } from './routes/call.$personaId'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const ProtectionRoute = ProtectionRouteImport.update({
+  id: '/protection',
+  path: '/protection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MapRoute = MapRouteImport.update({
@@ -38,44 +38,44 @@ const CallPersonaIdRoute = CallPersonaIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
-  '/settings': typeof SettingsRoute
+  '/protection': typeof ProtectionRoute
   '/call/$personaId': typeof CallPersonaIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
-  '/settings': typeof SettingsRoute
+  '/protection': typeof ProtectionRoute
   '/call/$personaId': typeof CallPersonaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/map': typeof MapRoute
-  '/settings': typeof SettingsRoute
+  '/protection': typeof ProtectionRoute
   '/call/$personaId': typeof CallPersonaIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/map' | '/settings' | '/call/$personaId'
+  fullPaths: '/' | '/map' | '/protection' | '/call/$personaId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/map' | '/settings' | '/call/$personaId'
-  id: '__root__' | '/' | '/map' | '/settings' | '/call/$personaId'
+  to: '/' | '/map' | '/protection' | '/call/$personaId'
+  id: '__root__' | '/' | '/map' | '/protection' | '/call/$personaId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MapRoute: typeof MapRoute
-  SettingsRoute: typeof SettingsRoute
+  ProtectionRoute: typeof ProtectionRoute
   CallPersonaIdRoute: typeof CallPersonaIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
+    '/protection': {
+      id: '/protection'
+      path: '/protection'
+      fullPath: '/protection'
+      preLoaderRoute: typeof ProtectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/map': {
@@ -105,7 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MapRoute: MapRoute,
-  SettingsRoute: SettingsRoute,
+  ProtectionRoute: ProtectionRoute,
   CallPersonaIdRoute: CallPersonaIdRoute,
 }
 export const routeTree = rootRouteImport

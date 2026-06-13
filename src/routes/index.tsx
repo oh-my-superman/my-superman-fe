@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { HomeScreen } from '#/features/home/home-screen'
+import { CallScreen } from '#/features/home/call-screen'
 
-export const Route = createFileRoute('/')({ component: HomeScreen })
+export const Route = createFileRoute('/')({ component: CallScreen })

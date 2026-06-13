@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { AppBar } from '#/components/app-bar'
 import { BottomNav } from '#/components/bottom-nav'
-import { Bell, Settings } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useCompanionSession } from '#/features/companion/session-store'
 import type { CompanionStatus } from '#/features/companion/companion-socket'
@@ -55,11 +55,6 @@ export function MainLayout({ children }: { children: ReactNode }) {
           statusActive={companion && sessionStatus !== 'error'}
           actions={[
             { icon: Bell, label: '알림' },
-            {
-              icon: Settings,
-              label: '설정',
-              onClick: () => navigate({ to: '/settings' }),
-            },
           ]}
         />
       </div>
