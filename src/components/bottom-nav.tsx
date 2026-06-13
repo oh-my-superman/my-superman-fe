@@ -2,6 +2,8 @@ import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { Map, Phone, Shield } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
+import { useCompanionStore } from '#/store/companion'
+
 interface Tab {
   to: string
   icon: LucideIcon
@@ -20,6 +22,8 @@ const TABS: Array<Tab> = [
 export function BottomNav() {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  // 보호모드 ON → coral-filled (활성), OFF → white circle.
+  const companion = useCompanionStore((s) => s.companion)
 
   return (
     <div
@@ -63,14 +67,18 @@ export function BottomNav() {
                   width: 56,
                   height: 56,
                   borderRadius: 99,
-                  background: active ? 'var(--coral-600)' : 'var(--coral-500)',
-                  color: '#fff',
+                  background: companion ? 'var(--coral-500)' : 'var(--card)',
+                  color: companion ? '#fff' : 'var(--coral-500)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '4px solid var(--background)',
-                  boxShadow: 'var(--shadow-coral)',
-                  transition: 'background-color .15s ease',
+                  border: companion
+                    ? '4px solid var(--background)'
+                    : '2px solid var(--coral-200)',
+                  boxShadow: companion
+                    ? 'var(--shadow-coral)'
+                    : 'var(--shadow-md)',
+                  transition: 'background-color .15s ease, color .15s ease',
                 }}
               >
                 <TabIcon size={26} fill="currentColor" />
