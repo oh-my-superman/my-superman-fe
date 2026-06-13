@@ -540,40 +540,6 @@ body {
   height: 96px;
   font-size: 38px;
 }
-[data-sm-slot='avatar'] [data-sm-part='badge'] {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  border-radius: var(--radius-full);
-  border: 2px solid var(--background);
-  box-sizing: border-box;
-}
-[data-sm-slot='avatar'][data-size='sm'] [data-sm-part='badge'] {
-  width: 10px;
-  height: 10px;
-}
-[data-sm-slot='avatar'][data-size='default'] [data-sm-part='badge'] {
-  width: 12px;
-  height: 12px;
-}
-[data-sm-slot='avatar'][data-size='lg'] [data-sm-part='badge'] {
-  width: 16px;
-  height: 16px;
-}
-[data-sm-slot='avatar'][data-size='xl'] [data-sm-part='badge'] {
-  width: 22px;
-  height: 22px;
-  border-width: 3px;
-}
-[data-sm-status='online'] {
-  background: var(--success);
-}
-[data-sm-status='busy'] {
-  background: var(--destructive);
-}
-[data-sm-status='idle'] {
-  background: var(--muted-foreground);
-}
 
 /* ── Map: user-location pulse ──────────────────────────────────────── */
 @keyframes sm-loc-pulse {

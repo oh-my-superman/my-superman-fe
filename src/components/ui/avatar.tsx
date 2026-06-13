@@ -2,14 +2,12 @@ import { useState } from 'react'
 import type { CSSProperties, ReactNode } from 'react'
 
 export type AvatarSize = 'sm' | 'default' | 'lg' | 'xl'
-export type AvatarStatus = 'online' | 'busy' | 'idle'
 
 interface AvatarProps {
   src?: string
   alt?: string
   fallback?: ReactNode
   size?: AvatarSize
-  status?: AvatarStatus
   /** Fallback background color (CSS value, e.g. var(--coral-100)). */
   bg?: string
   /** Fallback foreground color. */
@@ -18,13 +16,12 @@ interface AvatarProps {
   style?: CSSProperties
 }
 
-/** Persona avatar with graceful image fallback and optional status dot. */
+/** Persona avatar with graceful image fallback. */
 export function Avatar({
   src,
   alt = '',
   fallback,
   size = 'default',
-  status,
   bg,
   fg,
   className,
@@ -52,7 +49,6 @@ export function Avatar({
           {fallback}
         </span>
       )}
-      {status ? <span data-sm-part="badge" data-sm-status={status} /> : null}
     </span>
   )
 }

@@ -5,7 +5,6 @@ export interface Persona {
   icon?: string // Lucide icon name for mono style
   bg: string
   fg: string
-  status?: 'online'
   /** 짧은 설명구 (예: "다정한 일상 통화"). */
   tagline: string
 }
@@ -18,7 +17,6 @@ export const PERSONAS: Array<Persona> = [
     icon: 'Heart',
     bg: 'var(--coral-100)',
     fg: 'var(--coral-700)',
-    status: 'online',
     tagline: '다정한 일상 통화',
   },
   {
