@@ -38,7 +38,7 @@ export function AppBar({
   actions = [],
 }: AppBarProps) {
   return (
-    <div style={{ flex: 'none', background: 'var(--surface)' }}>
+    <div style={{ flex: 'none', background: '#ffffff' }}>
       <div
         style={{
           display: 'flex',
