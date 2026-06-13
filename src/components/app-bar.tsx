@@ -43,25 +43,13 @@ export function AppBar({ title, status, actions = [] }: AppBarProps) {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <img
-            src="/image/superman_app_icon.svg"
-            alt="슈퍼맨 로고"
+            src="/image/my-superman-logo.svg"
+            alt={title}
             style={{
-              width: 30,
-              height: 30,
-              borderRadius: 9,
-              flex: 'none',
-              boxShadow: 'var(--shadow-coral)',
+              height: 16,
+              objectFit: 'contain',
             }}
           />
-          <span
-            style={{
-              fontSize: 'var(--text-xl)',
-              fontWeight: 700,
-              letterSpacing: 'var(--tracking-tight)',
-            }}
-          >
-            {title}
-          </span>
         </div>
         <div style={{ display: 'flex', gap: 4 }}>
           {actions.map((a) => {
