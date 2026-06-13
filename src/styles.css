@@ -161,6 +161,23 @@
   display: none; /* Chrome, Safari and Opera */
 }
 
+/* Opt-in visible scrollbar (overrides the global hide) — e.g. map bottom sheet. */
+.sm-scroll {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--neutral-300) transparent;
+}
+.sm-scroll::-webkit-scrollbar {
+  display: block;
+  width: 6px;
+}
+.sm-scroll::-webkit-scrollbar-thumb {
+  background: var(--neutral-300);
+  border-radius: 999px;
+}
+.sm-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 html,
 body,
 #app {

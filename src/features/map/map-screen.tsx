@@ -520,21 +520,11 @@ export function MapScreen() {
             borderTopRightRadius: 'var(--radius-2xl)',
             boxShadow: '0 -10px 30px rgba(40,24,24,.10)',
             padding: '10px 16px 14px',
-            maxHeight: 236,
             display: 'flex',
             flexDirection: 'column',
             zIndex: 9,
           }}
         >
-          <div
-            style={{
-              width: 40,
-              height: 5,
-              borderRadius: 3,
-              background: 'var(--neutral-300)',
-              margin: '0 auto 10px',
-            }}
-          />
           <div
             style={{
               display: 'flex',
@@ -550,7 +540,16 @@ export function MapScreen() {
               실시간
             </Badge>
           </div>
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          <div
+            className="sm-scroll"
+            style={{
+              minHeight: 0,
+              overflowY: 'auto',
+              // Show up to ~3 rows (≈64px each); more scroll within.
+              maxHeight: 198,
+              paddingRight: 4,
+            }}
+          >
             {safehousesNear.slice(0, MAX_SAFE_LIST).map((s, i) => (
               <div key={s.id}>
                 {i > 0 && <ListDivider />}
@@ -564,9 +563,9 @@ export function MapScreen() {
               </div>
             ))}
 
-            {cctvNear.slice(0, MAX_CCTV_LIST).map((c) => (
+            {cctvNear.slice(0, MAX_CCTV_LIST).map((c, i) => (
               <div key={c.id}>
-                <ListDivider />
+                {(i > 0 || safehousesNear.length > 0) && <ListDivider />}
                 <ListItem
                   leading={<SpotIcon />}
                   title={c.address || `방범 CCTV (${c.purpose})`}
