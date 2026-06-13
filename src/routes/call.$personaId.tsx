@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   Hand,
   Mic,
@@ -28,6 +29,7 @@ import { useCall } from '#/features/call/call-store'
 import { SAFEWORD } from '#/features/call/call-controller'
 import { useCameraEvidence } from '#/features/capture/use-camera-evidence'
 import { useCompanionSession } from '#/features/companion/session-store'
+import { useCompanionStore } from '#/store/companion'
 import {
   buildDangerReport,
   sendDangerReport,
@@ -112,6 +114,8 @@ function CallScreen() {
   const stop = useCall((s) => s.stop)
   const toggleMute = useCall((s) => s.toggleMute)
   const dismissDanger = useCall((s) => s.dismissDanger)
+  const setCompanion = useCompanionStore((s) => s.setCompanion)
+  const [showCompanionToast, setShowCompanionToast] = useState(false)
   const [report, setReport] = useState<ReportState>(INITIAL_REPORT_STATE)
   const reportEventKeyRef = useRef<string | null>(null)
   const reportRequestRef = useRef<DangerReportRequest | null>(null)
@@ -133,6 +137,21 @@ function CallScreen() {
     start(persona.id)
     return () => stop()
   }, [persona.id, start, stop])
+
+  // 보호모드 해제 상태로 통화에 진입하면 보호모드를 함께 켜고 안내 toast를 띄운다.
+  useEffect(() => {
+    if (useCompanionStore.getState().companion) return
+    setCompanion(true)
+    setShowCompanionToast(true)
+    // 진입 시점 한 번만 판단하면 되므로 의존성은 비워 둔다.
+  }, [setCompanion])
+
+  // toast가 보이면 3초 뒤 자동으로 사라지게 한다.
+  useEffect(() => {
+    if (!showCompanionToast) return
+    const timer = setTimeout(() => setShowCompanionToast(false), 3000)
+    return () => clearTimeout(timer)
+  }, [showCompanionToast])
 
   const confirmReport = useCallback(() => {
     const request = reportRequestRef.current
@@ -332,6 +351,49 @@ function CallScreen() {
     </div>
   )
 
+  // 통화 진입 시 보호모드 자동 활성화 안내 toast (음성/영상 공통).
+  const companionToast = (
+    <AnimatePresence>
+      {showCompanionToast && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 16 }}
+          transition={{ duration: 0.25 }}
+          style={{
+            position: 'absolute',
+            bottom: 120,
+            left: 0,
+            right: 0,
+            display: 'flex',
+            justifyContent: 'center',
+            zIndex: 60,
+            pointerEvents: 'none',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '12px 20px',
+              borderRadius: 9999,
+              background: 'rgba(17, 17, 17, 0.88)',
+              color: '#fff',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              boxShadow: 'var(--shadow-md)',
+            }}
+          >
+            <ShieldAlert size={16} style={{ color: 'var(--coral-300)' }} />
+            보호모드도 함께 켜집니다
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
   // ── Live video call: remote (AI persona) main + self-camera PiP (reference). ──
   if (isVideoCall && status === 'live') {
     const chips: Array<{
@@ -349,11 +411,13 @@ function CallScreen() {
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          position: 'relative',
           background: 'var(--neutral-900)',
           color: '#fff',
           overflow: 'hidden',
         }}
       >
+        {companionToast}
         {/* Header: name + count + timer (left), icons (right) */}
         <div
           style={{
@@ -573,11 +637,13 @@ function CallScreen() {
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          position: 'relative',
           background: 'var(--neutral-900)',
           color: '#fff',
           overflow: 'hidden',
         }}
       >
+        {companionToast}
         {/* Header icons */}
         <div
           style={{
@@ -730,6 +796,7 @@ function CallScreen() {
         padding: 24,
       }}
     >
+      {companionToast}
       {/* Hidden evidence camera (voice call). */}
       <video
         ref={evidenceVideoRef}
