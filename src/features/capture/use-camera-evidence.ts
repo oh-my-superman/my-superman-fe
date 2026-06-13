@@ -90,6 +90,9 @@ export function useCameraEvidence(
           sessionId: session.sessionId,
         })
         if (isCancelled()) return
+        if (import.meta.env.DEV) {
+          console.info('[evidence] uploaded camera frame', photoUri)
+        }
         session.send({
           type: 'screen',
           userId: USER_ID,
