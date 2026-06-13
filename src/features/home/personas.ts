@@ -17,7 +17,7 @@ export const PERSONAS: Array<Persona> = [
     bg: 'var(--coral-100)',
     fg: 'var(--coral-700)',
     status: 'online',
-    tagline: '다정한 일상 통화',
+    tagline: '다정한 목소리로 일상을 공유하며 위험을 함께 감지합니다',
   },
   {
     id: 'dad',
@@ -25,7 +25,7 @@ export const PERSONAS: Array<Persona> = [
     glyph: '아',
     bg: 'var(--neutral-200)',
     fg: 'var(--neutral-700)',
-    tagline: '든든한 안부 통화',
+    tagline: '든든하고 엄격하게 주변 상황을 통제하며 안전을 확인합니다',
   },
   {
     id: 'boyfriend',
@@ -33,7 +33,7 @@ export const PERSONAS: Array<Persona> = [
     glyph: '💗',
     bg: 'var(--coral-50)',
     fg: 'var(--coral-600)',
-    tagline: '자연스러운 안부',
+    tagline: '자연스러운 대화 속에 세이프 단어를 녹여 위기를 모면합니다',
   },
   {
     id: 'police',
@@ -41,7 +41,7 @@ export const PERSONAS: Array<Persona> = [
     glyph: '👮',
     bg: 'var(--blue-info)',
     fg: '#fff',
-    tagline: '단호한 위기 대응',
+    tagline: '단호하고 전문적인 지시로 즉각적인 위기 대응을 돕습니다',
   },
 ]
 
