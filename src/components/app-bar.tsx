@@ -77,31 +77,43 @@ export function AppBar({
       {status && (
         <div
           style={{
+            padding: '6px 18px 14px',
             display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '10px 22px 14px',
           }}
         >
-          <span
+          <div
             style={{
-              width: 8,
-              height: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '5px 10px',
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
               borderRadius: 99,
-              background: statusActive
-                ? 'var(--success)'
-                : 'var(--muted-foreground)',
-              flex: 'none',
-            }}
-          />
-          <span
-            style={{
-              fontSize: 'var(--text-sm)',
-              color: 'var(--muted-foreground)',
+              boxShadow: 'var(--shadow-sm)',
             }}
           >
-            {status}
-          </span>
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 99,
+                background: statusActive
+                  ? 'var(--success)'
+                  : 'var(--muted-foreground)',
+                flex: 'none',
+              }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--muted-foreground)',
+              }}
+            >
+              {status}
+            </span>
+          </div>
         </div>
       )}
     </div>
