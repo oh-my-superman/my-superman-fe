@@ -8,7 +8,7 @@ import type { CompanionFrame } from '../companion/companion-socket'
 import type { AudioCaptureHandle } from './audio-capture'
 
 /** Fixed for now — will move to user settings later. */
-const SAFEWORD = '짜장면'
+export const SAFEWORD = '짜장면'
 
 export type CallStatus =
   | 'idle'

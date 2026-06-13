@@ -1,7 +1,5 @@
 const DEFAULT_SERVICE_PORT = '8080'
 const DEFAULT_HTTP_BASE = `http://localhost:${DEFAULT_SERVICE_PORT}`
-const DEFAULT_CCTV_PATH = '/api/cctv/nearby'
-const DEFAULT_SAFEHOUSE_PATH = '/api/safehouses/nearby'
 
 function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/, '')
@@ -22,7 +20,9 @@ function httpToWsBase(httpBase: string): string {
 }
 
 export function serviceHttpBase(): string {
-  const configured = import.meta.env.API_BASE_URL?.trim()
+  const configured =
+    import.meta.env.VITE_API_BASE_URL?.trim() ||
+    import.meta.env.API_BASE_URL?.trim()
   return trimTrailingSlash(
     configured || pageHostHttpBase() || DEFAULT_HTTP_BASE,
   )
@@ -34,18 +34,6 @@ export function companionWsUrl(): string {
     ? trimTrailingSlash(configuredWs)
     : httpToWsBase(serviceHttpBase())
   return `${wsBase}/ws/companion`
-}
-
-export function cctvApiPath(): string {
-  return ensureLeadingSlash(
-    import.meta.env.VITE_CCTV_API_PATH?.trim() || DEFAULT_CCTV_PATH,
-  )
-}
-
-export function safehouseApiPath(): string {
-  return ensureLeadingSlash(
-    import.meta.env.VITE_SAFEHOUSE_API_PATH?.trim() || DEFAULT_SAFEHOUSE_PATH,
-  )
 }
 
 export function serviceUrl(

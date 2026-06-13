@@ -1,13 +1,20 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Mic, MicOff, PhoneOff, ShieldAlert } from 'lucide-react'
 
 import { PERSONAS } from '#/features/home/personas'
 import { useCall } from '#/features/call/call-store'
+import { SAFEWORD } from '#/features/call/call-controller'
 import { useCameraEvidence } from '#/features/capture/use-camera-evidence'
+import { useCompanionSession } from '#/features/companion/session-store'
+import { buildSafewordReport } from '#/features/report/build-report'
+import type { ReportBuildResult } from '#/features/report/build-report'
 
 const isVideoSearch = (value: unknown) =>
   value === true || value === 'true' || value === '1'
+
+const EVIDENCE_UPLOAD_ENABLED =
+  import.meta.env.VITE_EVIDENCE_UPLOAD_ENABLED === 'true'
 
 export const Route = createFileRoute('/call/$personaId')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -26,6 +33,29 @@ const STATUS_LABEL: Record<string, string> = {
   error: '연결 실패',
 }
 
+type ReportStatus = 'idle' | 'building' | 'ready' | 'error'
+
+interface ReportState {
+  status: ReportStatus
+  result: ReportBuildResult | null
+  error: string | null
+}
+
+const INITIAL_REPORT_STATE: ReportState = {
+  status: 'idle',
+  result: null,
+  error: null,
+}
+
+function dangerEventKey(danger: NonNullable<ReturnType<typeof useCall.getState>['danger']>) {
+  const eventId = danger.event_id
+  if (typeof eventId === 'string' && eventId) return eventId
+  const ts = danger.ts_ms
+  if (typeof ts === 'string' || typeof ts === 'number') return String(ts)
+  const phrase = typeof danger.phrase === 'string' ? danger.phrase : ''
+  return `${danger.cause}:${phrase}`
+}
+
 /** Live AI voice call. Streams mic audio and plays the AI's voice in realtime. */
 function CallScreen() {
   const { personaId } = Route.useParams()
@@ -42,19 +72,69 @@ function CallScreen() {
   const stop = useCall((s) => s.stop)
   const toggleMute = useCall((s) => s.toggleMute)
   const dismissDanger = useCall((s) => s.dismissDanger)
+  const [report, setReport] = useState<ReportState>(INITIAL_REPORT_STATE)
+  const reportEventKeyRef = useRef<string | null>(null)
 
   const callFinished = status === 'ended' || status === 'error'
   const cameraActive = isVideoCall ? !callFinished : status === 'live'
 
-  const evidenceVideoRef = useCameraEvidence(cameraActive, status === 'live', {
-    facingMode: isVideoCall ? 'user' : 'environment',
-  })
+  const evidenceVideoRef = useCameraEvidence(
+    cameraActive,
+    EVIDENCE_UPLOAD_ENABLED && status === 'live',
+    {
+      facingMode: isVideoCall ? 'user' : 'environment',
+    },
+  )
 
   // Auto-start the call on mount, end it on leave.
   useEffect(() => {
     start(persona.id)
     return () => stop()
   }, [persona.id, start, stop])
+
+  useEffect(() => {
+    if (!danger) {
+      reportEventKeyRef.current = null
+      setReport(INITIAL_REPORT_STATE)
+      return
+    }
+    if (danger.cause !== 'safeword') return
+
+    const eventKey = dangerEventKey(danger)
+    if (reportEventKeyRef.current === eventKey) return
+    reportEventKeyRef.current = eventKey
+
+    const phrase = typeof danger.phrase === 'string' ? danger.phrase : SAFEWORD
+    const sessionId = useCompanionSession.getState().sessionId
+    if (!sessionId) {
+      setReport({
+        status: 'error',
+        result: null,
+        error: '세션 정보가 없어 신고 메시지를 만들 수 없어요.',
+      })
+      return
+    }
+
+    let cancelled = false
+    setReport({ status: 'building', result: null, error: null })
+    buildSafewordReport({ sessionId, safeword: phrase })
+      .then((result) => {
+        if (!cancelled) setReport({ status: 'ready', result, error: null })
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('[report] safeword report build failed', err)
+        setReport({
+          status: 'error',
+          result: null,
+          error: '신고 메시지 생성에 실패했어요.',
+        })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [danger])
 
   const endCall = () => {
     stop()
@@ -240,13 +320,35 @@ function CallScreen() {
         </button>
       </div>
 
-      {danger && <DangerModal onClose={dismissDanger} />}
+      {danger && (
+        <DangerModal danger={danger} report={report} onClose={dismissDanger} />
+      )}
     </div>
   )
 }
 
 /** Shown when the BE reports a danger event during the call. */
-function DangerModal({ onClose }: { onClose: () => void }) {
+function DangerModal({
+  danger,
+  report,
+  onClose,
+}: {
+  danger: NonNullable<ReturnType<typeof useCall.getState>['danger']>
+  report: ReportState
+  onClose: () => void
+}) {
+  const isSafeword = danger.cause === 'safeword'
+  const title = isSafeword
+    ? '세이프워드가 감지됐어요.'
+    : '통화 중 위험 신호가 감지됐어요.'
+  const description = (() => {
+    if (!isSafeword) return '위험 상황을 확인하고 있어요.'
+    if (report.status === 'building') return '신고 메시지를 생성하고 있어요.'
+    if (report.status === 'ready') return '신고 메시지가 준비됐어요.'
+    if (report.status === 'error') return report.error ?? '신고 메시지 생성 실패'
+    return '신고 메시지 생성으로 넘어갈게요.'
+  })()
+
   return (
     <div
       role="dialog"
@@ -290,16 +392,44 @@ function DangerModal({ onClose }: { onClose: () => void }) {
         </div>
         <p
           style={{
-            margin: '0 0 20px',
+            margin: '0 0 8px',
             fontSize: 'var(--text-base)',
             fontWeight: 600,
             lineHeight: 1.5,
             color: 'var(--foreground)',
           }}
         >
-          통화 중 위험 신호가 감지되었어요.
-          <br />1분 후 신고 메시지를 보낼게요.
+          {title}
         </p>
+        <p
+          style={{
+            margin: report.result?.reportMessage ? '0 0 14px' : '0 0 20px',
+            fontSize: 'var(--text-sm)',
+            lineHeight: 1.5,
+            color: 'var(--muted-foreground)',
+          }}
+        >
+          {description}
+        </p>
+        {report.result?.reportMessage && (
+          <div
+            style={{
+              maxHeight: 160,
+              overflowY: 'auto',
+              marginBottom: 16,
+              padding: 12,
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--neutral-100)',
+              textAlign: 'left',
+              whiteSpace: 'pre-wrap',
+              fontSize: 'var(--text-xs)',
+              lineHeight: 1.55,
+              color: 'var(--neutral-800)',
+            }}
+          >
+            {report.result.reportMessage}
+          </div>
+        )}
         <button
           type="button"
           onClick={onClose}
