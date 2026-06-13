@@ -50,6 +50,7 @@ export class CallController {
   #playback: AudioPlayback | null = null
   #unsubFrames: (() => void) | null = null
   #gestureCleanup: (() => void) | null = null
+  #callStartSent = false
 
   #listeners: Partial<CallListeners> = {}
 
@@ -76,6 +77,7 @@ export class CallController {
 
     const token = (this.#token += 1)
     this.#muted = false
+    this.#callStartSent = false
     this.#setStatus('connecting')
 
     // iOS unlocks audio only inside a user gesture. start() runs from the call
@@ -99,11 +101,16 @@ export class CallController {
       return
     }
     if (token !== this.#token) return // stopped/restarted while connecting
+    const liveSession = useCompanionSession.getState()
+    if (liveSession.status !== 'ready' || !liveSession.sessionId) {
+      this.#fail(token, 'WebSocket 연결이 준비되지 않았어요')
+      return
+    }
 
     this.#setStatus('starting')
-    session.send({
+    this.#callStartSent = liveSession.send({
       type: 'call.start',
-      session_id: session.sessionId,
+      session_id: liveSession.sessionId,
       persona_id: personaId,
       safeword: SAFEWORD,
       voice_name: voiceForPersona(personaId),
@@ -118,7 +125,10 @@ export class CallController {
       return
     }
     this.#setStatus('stopping')
-    useCompanionSession.getState().send({ type: 'call.stop' })
+    if (this.#callStartSent) {
+      const session = useCompanionSession.getState()
+      session.send({ type: 'call.stop', session_id: session.sessionId })
+    }
     this.#cleanup()
     this.#setStatus('ended')
   }
@@ -206,6 +216,7 @@ export class CallController {
     this.#unsubFrames = null
     this.#gestureCleanup?.()
     this.#gestureCleanup = null
+    this.#callStartSent = false
   }
 
   #fail(token: number, message: string): void {
