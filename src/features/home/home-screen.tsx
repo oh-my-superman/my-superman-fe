@@ -6,7 +6,6 @@ import {
   Phone,
   Plus,
   Settings,
-  ShieldCheck,
   Video,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -194,12 +193,22 @@ export function HomeScreen() {
               alignItems: 'center',
               justifyContent: 'center',
               background: companion ? 'var(--coral-500)' : 'var(--coral-50)',
-              color: companion ? '#fff' : 'var(--coral-600)',
               boxShadow: companion ? 'var(--shadow-coral)' : 'none',
               transition: 'background .2s ease',
+              overflow: 'hidden',
             }}
           >
-            <ShieldCheck size={26} />
+            <img
+              src="/image/superman_app_icon.svg"
+              alt="메인 화면 아이콘"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: companion ? 1 : 0.6,
+                transition: 'opacity .2s ease',
+              }}
+            />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div

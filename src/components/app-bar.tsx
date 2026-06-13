@@ -1,4 +1,3 @@
-import { ShieldCheck } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface AppBarAction {
@@ -43,22 +42,17 @@ export function AppBar({ title, status, actions = [] }: AppBarProps) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
+          <img
+            src="/image/superman_app_icon.svg"
+            alt="슈퍼맨 로고"
             style={{
               width: 30,
               height: 30,
               borderRadius: 9,
-              background: 'var(--coral-500)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              boxShadow: 'var(--shadow-coral)',
               flex: 'none',
+              boxShadow: 'var(--shadow-coral)',
             }}
-          >
-            <ShieldCheck size={18} />
-          </div>
+          />
           <span
             style={{
               fontSize: 'var(--text-xl)',

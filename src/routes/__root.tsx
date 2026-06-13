@@ -29,11 +29,29 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         title: '나의 슈퍼맨',
       },
+      {
+        name: 'theme-color',
+        content: '#ffffff',
+      },
     ],
     links: [
       {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/image/superman_app_icon.svg',
+      },
+      {
+        rel: 'manifest',
+        href: '/manifest.webmanifest',
+      },
+      {
         rel: 'stylesheet',
         href: appCss,
+      },
+    ],
+    scripts: [
+      {
+        children: `if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/sw.js', { scope: '/' })})}`,
       },
     ],
   }),
