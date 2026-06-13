@@ -6,7 +6,13 @@ import { PERSONAS } from '#/features/home/personas'
 import { useCall } from '#/features/call/call-store'
 import { useCameraEvidence } from '#/features/capture/use-camera-evidence'
 
+const isVideoSearch = (value: unknown) =>
+  value === true || value === 'true' || value === '1'
+
 export const Route = createFileRoute('/call/$personaId')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    video: isVideoSearch(search.video),
+  }),
   component: CallScreen,
 })
 
@@ -23,6 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
 /** Live AI voice call. Streams mic audio and plays the AI's voice in realtime. */
 function CallScreen() {
   const { personaId } = Route.useParams()
+  const { video: isVideoCall } = Route.useSearch()
   const navigate = useNavigate()
   const persona = PERSONAS.find((p) => p.id === personaId) ?? PERSONAS[0]
 
@@ -36,8 +43,12 @@ function CallScreen() {
   const toggleMute = useCall((s) => s.toggleMute)
   const dismissDanger = useCall((s) => s.dismissDanger)
 
-  // Capture camera frames to S3 evidence only while the call is live.
-  const evidenceVideoRef = useCameraEvidence(status === 'live')
+  const callFinished = status === 'ended' || status === 'error'
+  const cameraActive = isVideoCall ? !callFinished : status === 'live'
+
+  const evidenceVideoRef = useCameraEvidence(cameraActive, status === 'live', {
+    facingMode: isVideoCall ? 'user' : 'environment',
+  })
 
   // Auto-start the call on mount, end it on leave.
   useEffect(() => {
@@ -56,25 +67,60 @@ function CallScreen() {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
         background: 'var(--surface)',
         padding: 24,
       }}
     >
-      {/* Hidden camera feed — frames are grabbed for S3 evidence during the call. */}
-      <video
-        ref={evidenceVideoRef}
-        muted
-        playsInline
-        autoPlay
-        aria-hidden
-        style={{
-          position: 'absolute',
-          width: 1,
-          height: 1,
-          opacity: 0,
-          pointerEvents: 'none',
-        }}
-      />
+      {isVideoCall ? (
+        <div
+          aria-label="내 카메라 화면"
+          style={{
+            position: 'absolute',
+            right: 20,
+            bottom: 108,
+            zIndex: 3,
+            width: 'min(34vw, 132px)',
+            minWidth: 104,
+            aspectRatio: '3 / 4',
+            borderRadius: 18,
+            overflow: 'hidden',
+            background: 'var(--neutral-800)',
+            boxShadow: 'var(--shadow-lg)',
+            border: '2px solid rgba(255, 255, 255, 0.85)',
+          }}
+        >
+          <video
+            ref={evidenceVideoRef}
+            muted
+            playsInline
+            autoPlay
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scaleX(-1)',
+              display: 'block',
+            }}
+          />
+        </div>
+      ) : (
+        <video
+          ref={evidenceVideoRef}
+          muted
+          playsInline
+          autoPlay
+          aria-hidden
+          style={{
+            position: 'absolute',
+            width: 1,
+            height: 1,
+            opacity: 0,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
 
       {/* Persona identity + status */}
       <div

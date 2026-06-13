@@ -113,8 +113,12 @@ function SectionLabel({
 export function CallScreen() {
   const navigate = useNavigate()
 
-  const callPersona = (id: string) =>
-    navigate({ to: '/call/$personaId', params: { personaId: id } })
+  const callPersona = (id: string, video = false) =>
+    navigate({
+      to: '/call/$personaId',
+      params: { personaId: id },
+      search: { video },
+    })
 
   return (
     <MainLayout>
@@ -163,7 +167,7 @@ export function CallScreen() {
                 trailing={
                   <CallActions
                     onCall={() => callPersona(p.id)}
-                    onVideo={() => callPersona(p.id)}
+                    onVideo={() => callPersona(p.id, true)}
                   />
                 }
               />
