@@ -1,6 +1,15 @@
 import { createServerFn } from '@tanstack/react-start'
 
-import type { Bbox } from '#/features/map/cctv'
+import { safehouseApiPath, serviceUrl } from '#/lib/service-url'
+import {
+  extractItems,
+  fetchServiceJson,
+  isRecord,
+  nearbyQuery,
+  readNumber,
+  readString,
+} from '#/features/map/nearby-service'
+import type { Bbox } from '#/features/map/nearby-service'
 
 export interface SafeHousePoint {
   id: string
@@ -17,50 +26,69 @@ export interface SafeHouseResult {
 
 const MAX_RETURN = 200
 
-type RawSafe = Array<[number, number, string, string]>
-let cache: RawSafe | null = null
-
-/** Mirror of `cctv.ts` loading: fs in dev (no Vite JSON transform), bundled
- * dynamic import in prod. (safehouses.json is small, but stays consistent.) */
-async function loadSafehouses(): Promise<RawSafe> {
-  if (cache) return cache
-  if (import.meta.env.DEV) {
-    const [{ readFile }, { resolve }] = await Promise.all([
-      import('node:fs/promises'),
-      import('node:path'),
-    ])
-    const file = resolve(process.cwd(), 'src/features/map/safehouses.json')
-    cache = JSON.parse(await readFile(file, 'utf8')) as RawSafe
-  } else {
-    cache = (await import('#/features/map/safehouses.json')).default
+function normalizeSafeHousePoint(value: unknown): SafeHousePoint | null {
+  if (Array.isArray(value)) {
+    const [lat, lng, name, address] = value
+    if (typeof lat !== 'number' || typeof lng !== 'number') return null
+    return {
+      id: `${lat},${lng}`,
+      lat,
+      lng,
+      name: String(name ?? ''),
+      address: String(address ?? ''),
+    }
   }
-  return cache
+  if (!isRecord(value)) return null
+
+  const lat = readNumber(value, ['lat', 'latitude', 'y', '위도'])
+  const lng = readNumber(value, ['lng', 'lon', 'longitude', 'x', '경도'])
+  if (lat === null || lng === null) return null
+
+  const id =
+    readString(value, ['id', 'safehouseId', 'facilityId', 'placeId']) ||
+    `${lat},${lng}`
+
+  return {
+    id,
+    lat,
+    lng,
+    name: readString(value, [
+      'name',
+      'title',
+      'facilityName',
+      'storeName',
+      'placeName',
+      '업소명',
+      '시설명',
+    ]),
+    address: readString(value, [
+      'address',
+      'addr',
+      'roadAddress',
+      'jibunAddress',
+      'location',
+      '소재지도로명주소',
+      '소재지지번주소',
+    ]),
+  }
 }
 
 /**
- * Returns 안심지킴이집 inside the given bbox, nearest-to-center first. Source is
- * the geocoded `safehouses.json` (서울 여성안심지킴이집, preprocessed — no API).
+ * Returns 안심지킴이집 inside the given bbox from `mysuperman-service`.
  */
 export const fetchNearbySafehouses = createServerFn({ method: 'GET' })
   .validator((bbox: Bbox) => bbox)
   .handler(async ({ data: bbox }): Promise<SafeHouseResult> => {
-    const raw = await loadSafehouses()
-    const cx = (bbox.minX + bbox.maxX) / 2
-    const cy = (bbox.minY + bbox.maxY) / 2
-
-    const within: Array<SafeHousePoint> = []
-    for (const [lat, lng, name, address] of raw) {
-      if (lng < bbox.minX || lng > bbox.maxX) continue
-      if (lat < bbox.minY || lat > bbox.maxY) continue
-      within.push({ id: `${lat},${lng}`, lat, lng, name, address })
-    }
-
-    within.sort(
-      (a, b) =>
-        (a.lat - cy) ** 2 +
-        (a.lng - cx) ** 2 -
-        ((b.lat - cy) ** 2 + (b.lng - cx) ** 2),
+    const raw = await fetchServiceJson(
+      serviceUrl(safehouseApiPath(), nearbyQuery(bbox, MAX_RETURN)),
     )
+    const { items, total } = extractItems(raw)
+    const normalized = items
+      .map(normalizeSafeHousePoint)
+      .filter((item): item is SafeHousePoint => item !== null)
 
-    return { items: within.slice(0, MAX_RETURN), total: within.length }
+    return {
+      items: normalized.slice(0, MAX_RETURN),
+      total: total ?? normalized.length,
+    }
   })

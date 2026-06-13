@@ -21,7 +21,8 @@ export function useSafetySensors(active: boolean) {
 
   const triggerAlert = (msg: string) => {
     const now = Date.now()
-    if (now - lastAlertTimeRef.current > 5000) { // 5s cooldown
+    if (now - lastAlertTimeRef.current > 5000) {
+      // 5s cooldown
       alert(msg)
       lastAlertTimeRef.current = now
     }
@@ -47,7 +48,7 @@ export function useSafetySensors(active: boolean) {
       streamRef.current = stream
       const audioContext = new AudioContext()
       audioContextRef.current = audioContext
-      
+
       const source = audioContext.createMediaStreamSource(stream)
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = 256
@@ -65,13 +66,13 @@ export function useSafetySensors(active: boolean) {
         }
         const average = sum / bufferLength
         const db = Math.round(average) // Simplified dB-like value
-        
-        setData(prev => ({ ...prev, db }))
-        
+
+        setData((prev) => ({ ...prev, db }))
+
         if (db > DEFAULT_THRESHOLDS.decibel) {
           triggerAlert(`[경고] 높은 소음 감지: ${db}dB`)
         }
-        
+
         requestAnimationFrame(checkAudio)
       }
       checkAudio()
@@ -85,7 +86,7 @@ export function useSafetySensors(active: boolean) {
         const luxSensor = new (window as any).AmbientLightSensor()
         luxSensor.addEventListener('reading', () => {
           const lux = luxSensor.lux
-          setData(prev => ({ ...prev, lux }))
+          setData((prev) => ({ ...prev, lux }))
           if (lux < DEFAULT_THRESHOLDS.lux) {
             triggerAlert(`[경고] 급격한 조도 저하 감지: ${lux} lux`)
           }
@@ -103,7 +104,7 @@ export function useSafetySensors(active: boolean) {
         const pressureSensor = new (window as any).Barometer()
         pressureSensor.addEventListener('reading', () => {
           const pressure = pressureSensor.pressure
-          setData(prev => ({ ...prev, pressure }))
+          setData((prev) => ({ ...prev, pressure }))
           // Pressure thresholds are tricky, usually looking for sudden drops
         })
         pressureSensor.start()
@@ -115,14 +116,14 @@ export function useSafetySensors(active: boolean) {
   }
 
   function stopAll() {
-    sensorsRef.current.forEach(s => s.stop())
+    sensorsRef.current.forEach((s) => s.stop())
     sensorsRef.current = []
-    
+
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current.getTracks().forEach((track) => track.stop())
       streamRef.current = null
     }
-    
+
     if (audioContextRef.current) {
       audioContextRef.current.close()
       audioContextRef.current = null

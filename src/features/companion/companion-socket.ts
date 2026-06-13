@@ -11,6 +11,8 @@
  * runs (which only happens from a client effect).
  */
 
+import { companionWsUrl } from '#/lib/service-url'
+
 /** A realtime frame. `data` is the payload body; top-level fields are also allowed. */
 export interface CompanionFrame {
   type: string
@@ -44,15 +46,6 @@ type FrameListener = (frame: CompanionFrame) => void
 const READY_TIMEOUT_MS = 8_000
 const CLOSE_TIMEOUT_MS = 3_000
 const MAX_RECONNECT_ATTEMPTS = 5
-
-/** Resolve `ws(s)://<be-host>/ws/companion`, honoring `VITE_WS_BASE_URL`. */
-function resolveWsUrl(): string {
-  const base = import.meta.env.VITE_WS_BASE_URL
-  if (base) return `${base.replace(/\/+$/, '')}/ws/companion`
-  // Fallback: same host as the page, BE default port 8080.
-  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${proto}://${window.location.hostname}:8080/ws/companion`
-}
 
 export class CompanionSocket {
   #url: string | null
@@ -204,7 +197,7 @@ export class CompanionSocket {
 
     let socket: WebSocket
     try {
-      this.#url ??= resolveWsUrl()
+      this.#url ??= companionWsUrl()
       socket = new WebSocket(this.#url)
     } catch (err) {
       this.#scheduleReconnect()

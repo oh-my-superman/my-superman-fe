@@ -5,6 +5,7 @@ import { Mic, MicOff, PhoneOff, ShieldAlert } from 'lucide-react'
 import { Avatar } from '#/components/ui/avatar'
 import { PERSONAS } from '#/features/home/personas'
 import { useCall } from '#/features/call/call-store'
+import { useCompanionSession } from '#/features/companion/session-store'
 
 export const Route = createFileRoute('/call/$personaId')({
   component: CallScreen,
@@ -33,12 +34,30 @@ function CallScreen() {
   const start = useCall((s) => s.start)
   const stop = useCall((s) => s.stop)
   const toggleMute = useCall((s) => s.toggleMute)
+  const sessionStatus = useCompanionSession((s) => s.status)
+  const sessionId = useCompanionSession((s) => s.sessionId)
+  const sendCompanionFrame = useCompanionSession((s) => s.send)
 
   // Auto-start the call on mount, end it on leave.
   useEffect(() => {
     start(persona.id)
     return () => stop()
   }, [persona.id, start, stop])
+
+  useEffect(() => {
+    if (sessionStatus !== 'ready' || !sessionId) return
+    sendCompanionFrame({
+      type: 'screen.view',
+      session_id: sessionId,
+      data: {
+        screen: 'call',
+        path: `/call/${personaId}`,
+        personaId,
+        personaName: persona.name,
+        timestamp: new Date().toISOString(),
+      },
+    })
+  }, [persona.name, personaId, sendCompanionFrame, sessionId, sessionStatus])
 
   const endCall = () => {
     stop()
@@ -88,7 +107,12 @@ function CallScreen() {
           gap: 16,
         }}
       >
-        <Avatar fallback={persona.glyph} bg={persona.bg} fg={persona.fg} size="xl" />
+        <Avatar
+          fallback={persona.glyph}
+          bg={persona.bg}
+          fg={persona.fg}
+          size="xl"
+        />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
             {persona.name}
@@ -159,4 +183,3 @@ function CallScreen() {
     </div>
   )
 }
-

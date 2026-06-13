@@ -9,6 +9,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Badge } from '#/components/ui/badge'
 import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { MainLayout } from '#/components/main-layout'
+import { useCompanionSession } from '#/features/companion/session-store'
 import { SEOLLEUNG_CENTER } from '#/features/map/spots'
 import { fetchNearbyCctv } from '#/features/map/cctv'
 import type { Bbox } from '#/features/map/cctv'
@@ -28,6 +29,11 @@ const MAX_SAFE_LIST = 20
 interface LatLng {
   lat: number
   lng: number
+}
+
+interface UserLocation extends LatLng {
+  accuracy: number
+  timestamp: string
 }
 
 function bboxAround({ lat, lng }: LatLng): Bbox {
@@ -333,20 +339,28 @@ function KakaoCanvas({
 }
 
 /**
- * 지도 화면 — 안심 지킴이 집(목업) + 방범 CCTV(행안부 전국 CCTV 표준데이터 전처리)를
- * 카카오 지도에 표시. 지도를 움직이면 보이는 영역(bbox) 기준으로 근처 CCTV를 다시 조회한다.
+ * 지도 화면 — mysuperman-service에서 조회한 안심 지킴이 집 + CCTV를 카카오 지도에 표시한다.
+ * 지도를 움직이면 보이는 영역(bbox) 기준으로 근처 안전 지점을 다시 조회한다.
  */
 export function MapScreen() {
   const [center, setCenter] = useState<LatLng>(SEOLLEUNG_CENTER)
-  const [userPos, setUserPos] = useState<LatLng | null>(null)
+  const [userPos, setUserPos] = useState<UserLocation | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [bbox, setBbox] = useState<Bbox>(() => bboxAround(SEOLLEUNG_CENTER))
+  const sessionStatus = useCompanionSession((s) => s.status)
+  const sessionId = useCompanionSession((s) => s.sessionId)
+  const sendCompanionFrame = useCompanionSession((s) => s.send)
 
   const locate = useCallback(() => {
     // Runs only from useEffect / onClick (client), so navigator is available.
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const next = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        const next = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          timestamp: new Date(pos.timestamp).toISOString(),
+        }
         setUserPos(next)
         setCenter(next)
         setBbox(bboxAround(next))
@@ -362,6 +376,20 @@ export function MapScreen() {
   useEffect(() => {
     locate()
   }, [locate])
+
+  useEffect(() => {
+    if (!userPos || sessionStatus !== 'ready' || !sessionId) return
+    sendCompanionFrame({
+      type: 'gps.update',
+      session_id: sessionId,
+      data: {
+        lat: userPos.lat,
+        lng: userPos.lng,
+        accuracy: userPos.accuracy,
+        timestamp: userPos.timestamp,
+      },
+    })
+  }, [sendCompanionFrame, sessionId, sessionStatus, userPos])
 
   const cctvQuery = useQuery({
     queryKey: ['cctv', roundBbox(bbox)],
@@ -384,7 +412,7 @@ export function MapScreen() {
       .sort((a, b) => a.distance - b.distance)
   }, [cctvQuery.data, refPoint])
 
-  // 안심지킴이집 (geocoded JSON, server-filtered by bbox).
+  // 안심지킴이집 (mysuperman-service, server-filtered by bbox).
   const safehousesQuery = useQuery({
     queryKey: ['safehouses', roundBbox(bbox)],
     queryFn: () => fetchNearbySafehouses({ data: bbox }),
@@ -561,7 +589,6 @@ export function MapScreen() {
                   }}
                 >
                   이 영역에는 표시할 안전 지점이 없어요. 지도를 옮겨 보세요.
-                  (데이터: 서울 지역)
                 </p>
               )}
           </div>

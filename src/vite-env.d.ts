@@ -5,9 +5,18 @@ interface ImportMetaEnv {
   /** Kakao Maps JavaScript app key (public; protected by domain allowlist). */
   readonly VITE_KAKAO_MAP_APP_KEY?: string
   /**
+   * Base origin of mysuperman-service, e.g. `http://localhost:8080`.
+   * REST calls use this directly and WebSocket calls derive `ws(s)://` from it.
+   */
+  readonly VITE_API_BASE_URL?: string
+  /** CCTV endpoint path under `VITE_API_BASE_URL`. */
+  readonly VITE_CCTV_API_PATH?: string
+  /** Safe-house endpoint path under `VITE_API_BASE_URL`. */
+  readonly VITE_SAFEHOUSE_API_PATH?: string
+  /**
    * Base origin of the BE realtime server, e.g. `ws://localhost:8080` (or
    * `wss://…` in prod). The `/ws/companion` path is appended automatically.
-   * Falls back to the page host on port 8080 when unset.
+   * Optional compatibility override; `VITE_API_BASE_URL` is preferred.
    */
   readonly VITE_WS_BASE_URL?: string
 }

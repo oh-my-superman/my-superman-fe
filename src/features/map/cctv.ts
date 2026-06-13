@@ -1,11 +1,17 @@
 import { createServerFn } from '@tanstack/react-start'
 
-export interface Bbox {
-  minX: number // 경도(lng) min
-  maxX: number // 경도(lng) max
-  minY: number // 위도(lat) min
-  maxY: number // 위도(lat) max
-}
+import { cctvApiPath, serviceUrl } from '#/lib/service-url'
+import {
+  extractItems,
+  fetchServiceJson,
+  isRecord,
+  nearbyQuery,
+  readNumber,
+  readString,
+} from '#/features/map/nearby-service'
+import type { Bbox } from '#/features/map/nearby-service'
+
+export type { Bbox } from '#/features/map/nearby-service'
 
 export interface CctvPoint {
   id: string
@@ -25,55 +31,68 @@ export interface CctvResult {
 // Cap the response so a dense Seoul viewport doesn't ship thousands of points.
 const MAX_RETURN = 200
 
-type RawCctv = Array<[number, number, string, string]>
-let cache: RawCctv | null = null
-
-/**
- * Loads the bundled dataset. In production we dynamic-import the JSON (Vite
- * splits it into a server chunk). In dev we read it with fs instead — letting
- * Vite transform a ~3MB JSON module on the fly can hang/crash the dev server.
- */
-async function loadCctv(): Promise<RawCctv> {
-  if (cache) return cache
-  if (import.meta.env.DEV) {
-    const [{ readFile }, { resolve }] = await Promise.all([
-      import('node:fs/promises'),
-      import('node:path'),
-    ])
-    const file = resolve(process.cwd(), 'src/features/map/cctv-data.json')
-    cache = JSON.parse(await readFile(file, 'utf8')) as RawCctv
-  } else {
-    cache = (await import('#/features/map/cctv-data.json')).default
+function normalizeCctvPoint(value: unknown): CctvPoint | null {
+  if (Array.isArray(value)) {
+    const [lat, lng, purpose, address] = value
+    if (typeof lat !== 'number' || typeof lng !== 'number') return null
+    return {
+      id: `${lat},${lng}`,
+      lat,
+      lng,
+      purpose: String(purpose ?? ''),
+      address: String(address ?? ''),
+    }
   }
-  return cache
+  if (!isRecord(value)) return null
+
+  const lat = readNumber(value, ['lat', 'latitude', 'y', '위도'])
+  const lng = readNumber(value, ['lng', 'lon', 'longitude', 'x', '경도'])
+  if (lat === null || lng === null) return null
+
+  const id =
+    readString(value, ['id', 'cctvId', 'facilityId']) || `${lat},${lng}`
+
+  return {
+    id,
+    lat,
+    lng,
+    purpose: readString(value, [
+      'purpose',
+      'installationPurpose',
+      'installPurpose',
+      'purposeName',
+      'category',
+      'type',
+      '설치목적구분',
+    ]),
+    address: readString(value, [
+      'address',
+      'addr',
+      'roadAddress',
+      'jibunAddress',
+      'location',
+      '소재지도로명주소',
+      '소재지지번주소',
+    ]),
+  }
 }
 
 /**
- * Returns 방범(crime-prevention) CCTV inside the given bbox, nearest-to-center
- * first. Source is the bundled `cctv-data.json` (preprocessed from the 행안부
- * 전국 CCTV 표준데이터 — that dataset has no queryable API). The JSON is imported
- * inside the handler so it stays in the server bundle, never the client.
+ * Returns CCTV inside the given bbox from `mysuperman-service`.
  */
 export const fetchNearbyCctv = createServerFn({ method: 'GET' })
   .validator((bbox: Bbox) => bbox)
   .handler(async ({ data: bbox }): Promise<CctvResult> => {
-    const raw = await loadCctv()
-    const cx = (bbox.minX + bbox.maxX) / 2
-    const cy = (bbox.minY + bbox.maxY) / 2
-
-    const within: Array<CctvPoint> = []
-    for (const [lat, lng, purpose, address] of raw) {
-      if (lng < bbox.minX || lng > bbox.maxX) continue
-      if (lat < bbox.minY || lat > bbox.maxY) continue
-      within.push({ id: `${lat},${lng}`, lat, lng, purpose, address })
-    }
-
-    within.sort(
-      (a, b) =>
-        (a.lat - cy) ** 2 +
-        (a.lng - cx) ** 2 -
-        ((b.lat - cy) ** 2 + (b.lng - cx) ** 2),
+    const raw = await fetchServiceJson(
+      serviceUrl(cctvApiPath(), nearbyQuery(bbox, MAX_RETURN)),
     )
+    const { items, total } = extractItems(raw)
+    const normalized = items
+      .map(normalizeCctvPoint)
+      .filter((item): item is CctvPoint => item !== null)
 
-    return { items: within.slice(0, MAX_RETURN), total: within.length }
+    return {
+      items: normalized.slice(0, MAX_RETURN),
+      total: total ?? normalized.length,
+    }
   })
