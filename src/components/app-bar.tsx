@@ -87,7 +87,7 @@ export function AppBar({
                   gap: 5,
                   padding: '4px 10px',
                   background: statusActive
-                    ? 'rgba(240, 128, 128, 0.7)'
+                    ? 'rgba(47, 175, 106, 0.1)'
                     : 'var(--neutral-100)',
                   borderRadius: 99,
                 }}
@@ -99,7 +99,7 @@ export function AppBar({
                     borderRadius: 99,
                     background: statusActive
                       ? 'var(--success)'
-                      : 'var(--muted-foreground)',
+                      : 'var(--neutral-500)',
                     flex: 'none',
                   }}
                 />
@@ -107,7 +107,9 @@ export function AppBar({
                   style={{
                     fontSize: 10,
                     fontWeight: 900,
-                    color: statusActive ? '#ffffff' : 'var(--muted-foreground)',
+                    color: statusActive
+                      ? 'var(--success)'
+                      : 'var(--neutral-500)',
                     letterSpacing: '0.02em',
                   }}
                 >
