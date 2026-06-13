@@ -205,12 +205,6 @@ export function ProtectionScreen() {
                 height: '100%',
                 borderRadius: '50%',
                 background: '#ffffff',
-                overflow: 'hidden',
-                WebkitMaskImage: '-webkit-radial-gradient(white, black)',
-                transform: 'translateZ(0)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 position: 'relative',
                 zIndex: 1,
                 boxShadow: companion
@@ -219,38 +213,52 @@ export function ProtectionScreen() {
                 transition: 'all .4s ease',
               }}
             >
-              <video
-                ref={videoRef}
-                src="/video/flying_superman.mp4"
-                muted
-                playsInline
+              <div
                 style={{
-                  width: '120%',
-                  height: '120%',
-                  objectFit: 'cover',
-                  transform: companion
-                    ? 'scale(1) translateY(+10px)'
-                    : 'scale(1)',
-                  transition: 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  mixBlendMode: 'multiply',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                  transform: 'translateZ(0)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
-                onTimeUpdate={() => {
-                  if (
-                    companion &&
-                    videoRef.current &&
-                    videoRef.current.currentTime >=
-                      videoRef.current.duration - 0.2
-                  ) {
-                    videoRef.current.currentTime = 5.7
-                  }
-                }}
-                onEnded={() => {
-                  if (companion && videoRef.current) {
-                    videoRef.current.currentTime = 5.7
-                    videoRef.current.play()
-                  }
-                }}
-              />
+              >
+                <video
+                  ref={videoRef}
+                  src="/video/flying_superman.mp4"
+                  muted
+                  playsInline
+                  style={{
+                    width: '120%',
+                    height: '120%',
+                    objectFit: 'cover',
+                    transform: companion
+                      ? 'scale(1) translateY(+10px)'
+                      : 'scale(1)',
+                    transition: 'transform .5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    mixBlendMode: 'multiply',
+                  }}
+                  onTimeUpdate={() => {
+                    if (
+                      companion &&
+                      videoRef.current &&
+                      videoRef.current.currentTime >=
+                        videoRef.current.duration - 0.2
+                    ) {
+                      videoRef.current.currentTime = 5.7
+                    }
+                  }}
+                  onEnded={() => {
+                    if (companion && videoRef.current) {
+                      videoRef.current.currentTime = 5.7
+                      videoRef.current.play()
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
 
@@ -359,6 +367,7 @@ export function ProtectionScreen() {
                   fontWeight: 600,
                   textAlign: 'center',
                   padding: 40,
+                  marginTop: 20,
                 }}
               >
                 센서 데이터가 이곳에 표시됩니다

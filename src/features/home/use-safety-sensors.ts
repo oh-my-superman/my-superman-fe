@@ -129,14 +129,23 @@ export function useSafetySensors(active: boolean) {
 
     // 4. Motion & Rotation (Standard API)
     const handleMotion = (event: DeviceMotionEvent) => {
-      const acc = event.accelerationIncludingGravity
+      // 1st priority: acceleration (excludes gravity)
+      // 2nd priority: accelerationIncludingGravity (requires subtracting gravity)
+      const acc = event.acceleration || event.accelerationIncludingGravity
+      
       if (acc) {
-        // Calculate magnitude of acceleration vector
-        const magnitude = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2)
+        let magnitude = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2)
+        
+        // If using includingGravity, subtract approx earth gravity (9.8)
+        if (!event.acceleration && event.accelerationIncludingGravity) {
+          magnitude = Math.abs(magnitude - 9.80665)
+        }
+
         const motionVal = Math.round(magnitude * 10) / 10
         setData(prev => ({ ...prev, motion: motionVal }))
         
-        if (magnitude > 30) { // Approx 3G
+        // Threshold for strong impact (approx 2.5G - 3G beyond gravity/rest)
+        if (motionVal > 25) { 
           triggerAlert(`[경고] 강한 충격 감지!`)
         }
       }
