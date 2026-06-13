@@ -59,20 +59,15 @@ export function AppBar({
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           {status && (
-          <div
-            className={statusActive ? 'animate-sm-chip-pulse' : ''}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '5px 12px',
-              background: statusActive
-                ? 'rgba(240, 128, 128, 0.7)'
-                : 'var(--neutral-100)',
-              border: 'none',
-              borderRadius: 99,
-            }}
-          >
+            <div
+              className={statusActive ? 'animate-sm-chip-pulse' : ''}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0 4px',
+              }}
+            >
               <span
                 style={{
                   width: 6,
@@ -86,9 +81,9 @@ export function AppBar({
               />
               <span
                 style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 700,
-                  color: statusActive ? '#ffffff' : '#928c86',
+                  color: statusActive ? 'var(--success)' : 'var(--muted-foreground)',
                   letterSpacing: '-0.01em',
                 }}
               >
