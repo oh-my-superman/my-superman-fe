@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { Phone, Plus, Video } from 'lucide-react'
+import { Phone, Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { Avatar } from '#/components/ui/avatar'
@@ -7,107 +7,75 @@ import { ListDivider, ListItem } from '#/components/ui/list-item'
 import { MainLayout } from '#/components/main-layout'
 import { PERSONAS } from '#/features/home/personas'
 
-/** Per-persona call + video-call actions (right side of each roster row). */
-function CallActions({
-  onCall,
-  onVideo,
-}: {
-  onCall: () => void
-  onVideo: () => void
-}) {
-  const base: React.CSSProperties = {
-    width: 38,
-    height: 38,
-    borderRadius: 99,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    flex: 'none',
-  }
+/** Per-persona single call action (right side of each roster row). */
+function CallAction({ onCall }: { onCall: () => void }) {
   return (
-    <div style={{ display: 'flex', gap: 8 }}>
+    <div
+      className="call-actions-group"
+      style={{ display: 'flex', flexShrink: 0, alignItems: 'center' }}
+    >
       <button
         type="button"
+        className="call-action-btn"
+        data-variant="voice"
         aria-label="통화"
-        onClick={onCall}
-        style={{
-          ...base,
-          border: '1px solid var(--coral-200)',
-          background: 'var(--card)',
-          color: 'var(--coral-600)',
+        onClick={(e) => {
+          e.stopPropagation()
+          onCall()
         }}
-      >
-        <Phone size={18} />
-      </button>
-      <button
-        type="button"
-        aria-label="영상통화"
-        onClick={onVideo}
         style={{
-          ...base,
+          width: 40,
+          height: 40,
+          background: 'transparent',
+          color: 'var(--neutral-400)',
           border: 'none',
-          background: 'var(--coral-500)',
-          color: '#fff',
-          boxShadow: 'var(--shadow-xs)',
+          boxShadow: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
         }}
-      >
-        <Video size={19} />
-      </button>
+        onMouseOver={(e) => {
+          e.currentTarget.style.background = 'var(--neutral-100)'
+          e.currentTarget.style.color = 'var(--neutral-600)'
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'var(--neutral-400)'
+        }}
+        >
+        <Phone size={22} />
+        </button>
     </div>
   )
 }
 
-function SectionLabel({
-  children,
-  action,
-  onAction,
-}: {
-  children: ReactNode
-  action?: string
-  onAction?: () => void
-}) {
+function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 4px 8px',
+        padding: '24px 20px 8px',
       }}
     >
       <span
         style={{
-          fontSize: 'var(--text-sm)',
+          fontSize: 'var(--text-xs)',
           fontWeight: 700,
-          color: 'var(--muted-foreground)',
+          color: 'var(--coral-500)',
+          letterSpacing: '0.02em',
+          textTransform: 'uppercase',
         }}
       >
         {children}
       </span>
-      {action && (
-        <button
-          type="button"
-          onClick={onAction}
-          style={{
-            border: 'none',
-            background: 'none',
-            color: 'var(--coral-600)',
-            fontWeight: 600,
-            fontSize: 'var(--text-sm)',
-            cursor: 'pointer',
-            fontFamily: 'var(--font-sans)',
-          }}
-        >
-          {action}
-        </button>
-      )}
     </div>
   )
 }
 
 /**
- * 통화 화면 — a roster of call personas ("내 슈퍼맨").
+ * 통화 화면 — Galaxy Contacts style roster.
  */
 export function CallScreen() {
   const navigate = useNavigate()
@@ -126,25 +94,38 @@ export function CallScreen() {
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
-          background: 'var(--card)', // Typically white
+          background: '#ffffff',
         }}
       >
-        <div style={{ padding: '16px 20px 8px' }}>
-          <SectionLabel action="편집" onAction={() => {}}>
-            내 슈퍼맨
-          </SectionLabel>
-          <div
+        <div style={{ padding: '32px 24px 16px' }}>
+          <h1
             style={{
-              fontSize: 'var(--text-sm)',
-              color: 'var(--muted-foreground)',
-              padding: '0 4px',
+              fontSize: 28,
+              fontWeight: 800,
+              color: 'var(--foreground)',
+              margin: 0,
             }}
           >
-            다양한 AI 페르소나와 통화
-          </div>
+            내 슈퍼맨
+          </h1>
+          <p
+            style={{
+              fontSize: 13,
+              color: 'var(--neutral-500)',
+              marginTop: 6,
+              fontWeight: 500,
+              lineHeight: 1.5,
+              wordBreak: 'keep-all',
+            }}
+          >
+            위험 상황 시 AI 슈퍼맨과 통화하세요. 모든 대화 맥락과 세이프 단어를
+            실시간으로 분석하여 당신의 안전을 지켜드립니다.
+          </p>
         </div>
 
-        <div style={{ marginTop: 8 }}>
+        <SectionLabel>최근 통화 또는 즐겨찾기</SectionLabel>
+
+        <div style={{ paddingBottom: 40 }}>
           {PERSONAS.map((p, i) => (
             <div key={p.id}>
               {i > 0 && <ListDivider inset />}
@@ -155,42 +136,43 @@ export function CallScreen() {
                     bg={p.bg}
                     fg={p.fg}
                     status={p.status}
+                    size="default"
                   />
                 }
-                title={p.name}
+                title={
+                  <span style={{ fontSize: 17, fontWeight: 600 }}>
+                    {p.name}
+                  </span>
+                }
                 subtitle={p.tagline}
-                trailing={
-                  <CallActions
-                    onCall={() => callPersona(p.id)}
-                    onVideo={() => callPersona(p.id, true)}
-                  />
-                }
+                trailing={<CallAction onCall={() => callPersona(p.id)} />}
+                onClick={() => callPersona(p.id)}
               />
             </div>
           ))}
-          <ListDivider inset />
-          <ListItem
-            leading={
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 99,
-                  border: '1.5px dashed var(--neutral-300)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--muted-foreground)',
-                }}
-              >
-                <Plus size={20} />
-              </div>
-            }
-            title="새 페르소나 만들기"
-            subtitle="성격 · 말투 · 호칭을 직접 설정"
-            chevron
-            onClick={() => {}}
-          />
+
+          <div style={{ padding: '24px 20px' }}>
+            <button
+              onClick={() => {}}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: 16,
+                background: 'var(--neutral-50)',
+                border: '1px dashed var(--neutral-300)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                color: 'var(--neutral-600)',
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <Plus size={20} strokeWidth={2.5} />새 페르소나 만들기
+            </button>
+          </div>
         </div>
       </div>
     </MainLayout>
