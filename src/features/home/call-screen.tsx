@@ -203,7 +203,7 @@ export function CallScreen() {
                     }
                     bg={p.bg}
                     fg={p.fg}
-                    status={p.status}
+                    // status={p.status}
                     size="default"
                   />
                 }
@@ -213,8 +213,8 @@ export function CallScreen() {
                   </span>
                 }
                 subtitle={p.tagline}
-                trailing={<CallAction onCall={() => callPersona(p.id)} />}
-                onClick={() => callPersona(p.id)}
+                trailing={<CallAction onCall={() => callPersona(p.id, true)} />}
+                onClick={() => callPersona(p.id, true)}
               />
             </div>
           ))}

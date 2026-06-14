@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
+  CheckCircle2,
   Hand,
   Mic,
   MicOff,
@@ -184,8 +185,9 @@ function CallScreen() {
           secondsLeft: 0,
         })
         reportRequestRef.current = null
+        // 신고 접수 후 통화는 종료하되, 홈으로 바로 이동하지 않고
+        // 접수 완료 화면을 보여준 뒤 사용자가 "홈으로"를 누르면 이동한다.
         stop()
-        navigate({ to: '/', replace: true })
       } catch (err) {
         console.error('[report] danger report submit failed', err)
         setReport({
@@ -198,6 +200,11 @@ function CallScreen() {
         reportInFlightRef.current = false
       }
     })()
+  }, [stop])
+
+  const goHome = useCallback(() => {
+    stop()
+    navigate({ to: '/', replace: true })
   }, [navigate, stop])
 
   const cancelReport = useCallback(() => {
@@ -530,9 +537,12 @@ function CallScreen() {
             background: '#000',
           }}
         >
-          <img
-            src="/image/listening.png"
-            alt=""
+          <video
+            src="/video/listening.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{
               position: 'absolute',
               inset: 0,
@@ -543,9 +553,12 @@ function CallScreen() {
               transition: 'opacity .15s ease',
             }}
           />
-          <img
-            src="/image/talking.png"
-            alt=""
+          <video
+            src="/video/talking.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{
               position: 'absolute',
               inset: 0,
@@ -623,6 +636,7 @@ function CallScreen() {
             onConfirm={confirmReport}
             onCancel={cancelReport}
             onClose={dismissDanger}
+            onGoHome={goHome}
           />
         )}
       </div>
@@ -777,6 +791,7 @@ function CallScreen() {
             onConfirm={confirmReport}
             onCancel={cancelReport}
             onClose={dismissDanger}
+            onGoHome={goHome}
           />
         )}
       </div>
@@ -835,9 +850,12 @@ function CallScreen() {
             boxShadow: 'var(--shadow-md)',
           }}
         >
-          <img
-            src="/image/listening.png"
-            alt=""
+          <video
+            src="/video/listening.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{
               position: 'absolute',
               inset: 0,
@@ -848,9 +866,12 @@ function CallScreen() {
               transition: 'opacity .15s ease',
             }}
           />
-          <img
-            src="/image/talking.png"
-            alt=""
+          <video
+            src="/video/talking.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
             style={{
               position: 'absolute',
               inset: 0,
@@ -937,6 +958,7 @@ function CallScreen() {
           onConfirm={confirmReport}
           onCancel={cancelReport}
           onClose={dismissDanger}
+          onGoHome={goHome}
         />
       )}
     </div>
@@ -950,27 +972,34 @@ function DangerModal({
   onConfirm,
   onCancel,
   onClose,
+  onGoHome,
 }: {
   danger: NonNullable<ReturnType<typeof useCall.getState>['danger']>
   report: ReportState
   onConfirm: () => void
   onCancel: () => void
   onClose: () => void
+  onGoHome: () => void
 }) {
   const isSafeword = danger.cause === 'safeword'
   const isScream = danger.cause === 'scream'
-  const title = isSafeword
-    ? '세이프워드가 감지됐어요.'
-    : isScream
-      ? '비명 소리가 감지됐어요.'
-      : '통화 중 위험 신호가 감지됐어요.'
+  const succeeded = report.status === 'ready'
+  const title = succeeded
+    ? '신고가 접수됐어요.'
+    : isSafeword
+      ? '세이프워드가 감지됐어요.'
+      : isScream
+        ? '비명 소리가 감지됐어요.'
+        : '통화 중 위험 신호가 감지됐어요.'
   const description = (() => {
+    if (succeeded) {
+      return '신고가 성공적으로 접수됐어요. 곧 도움이 도착할 거예요.'
+    }
     if (!isSafeword && !isScream) return '위험 상황을 확인하고 있어요.'
     if (report.status === 'confirming') {
       return `${report.secondsLeft}초 후 자동으로 신고 요청을 보낼게요.`
     }
     if (report.status === 'building') return '신고 요청을 보내고 있어요.'
-    if (report.status === 'ready') return '신고 요청이 접수됐어요.'
     if (report.status === 'error') return report.error ?? '신고 요청 실패'
     return '신고 요청으로 넘어갈게요.'
   })()
@@ -1012,11 +1041,11 @@ function DangerModal({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'var(--destructive)',
+            background: succeeded ? 'var(--success, #16a34a)' : 'var(--destructive)',
             color: '#fff',
           }}
         >
-          <ShieldAlert size={28} />
+          {succeeded ? <CheckCircle2 size={28} /> : <ShieldAlert size={28} />}
         </div>
         <p
           style={{
@@ -1058,7 +1087,26 @@ function DangerModal({
             {report.result.reportMessage}
           </div>
         )}
-        {confirming ? (
+        {succeeded ? (
+          <button
+            type="button"
+            onClick={onGoHome}
+            style={{
+              width: '100%',
+              height: 48,
+              borderRadius: 'var(--radius-lg)',
+              border: 'none',
+              background: 'var(--success, #16a34a)',
+              color: '#fff',
+              fontSize: 'var(--text-base)',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            홈으로
+          </button>
+        ) : confirming ? (
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               type="button"
